@@ -74,7 +74,7 @@
 
                     <!-- Alert notification -->
                     <section
-                        class="hidden top-5 right-5 z-50 fixed opacity-0 transition-all translate-y-4 duration-300 modal transform">
+                        class="hidden top-5 right-5 z-[9999] fixed opacity-0 transition-all translate-y-4 duration-300 modal transform">
                         <div
                             class="flex items-center bg-white shadow-lg pr-4 border border-red-500 rounded-lg w-[90vw] sm:w-96 h-16 overflow-hidden">
                             <div class="flex justify-center items-center bg-red-100 w-12 h-full">
@@ -402,6 +402,7 @@
 
                         try {
                             const values = await dataManager.fetchDeviceData(state.selectedDevice);
+                            console.log(values)
                             state.chartData = [...values];
 
                             if (state.chartData.length > 0) {

@@ -656,6 +656,14 @@ video {
   z-index: 50;
 }
 
+.z-\[999\] {
+  z-index: 999;
+}
+
+.z-\[9999\] {
+  z-index: 9999;
+}
+
 .mx-10 {
   margin-left: 2.5rem;
   margin-right: 2.5rem;
