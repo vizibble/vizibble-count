@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JBR | Records</title>
+    <link rel="shortcut icon" href="/Images/favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="/CSS/output.css">
+
+    <head>
+        <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
+    </head>
+</head>
+
+<body class="bg-gray-900 w-full h-full bg-">
+    <%- include('includes/navbar.ejs') %>
+        <main class="relative flex flex-col gap-5 py-10 flex-grow">
+            <% if (locals.names) { %>
+                <section class="flex flex-col justify-center items-center gap-5 px-10">
+                    <article class="flex sm:flex-row flex-col gap-5">
+                        <div>
+                            <button id="dropdownRadioButtonTanker" data-dropdown-toggle="dropdownRadioTanker"
+                                class="inline-flex items-center bg-blue-700 hover:bg-blue-600 px-3 py-1.5 rounded-lg font-medium text-sm text-white focus:outline-none"
+                                type="button">
+                                Choose a Tanker
+                                <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                    fill="none" viewBox="0 0 10 6">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="m1 1 4 4 4-4" />
+                                </svg>
+                            </button>
+                            <!-- Dropdown menu -->
+                            <div id="dropdownRadioTanker"
+                                class="z-[1009] hidden bg-gray-700 shadow rounded-lg divide-y divide-gray-600 w-48"
+                                data-popper-reference-hidden="" data-popper-escaped="" data-popper-placement="top"
+                                style="position: absolute; inset: auto auto 0px 0px; margin: 0px; transform: translate3d(522.5px, 3847.5px, 0px);">
+                                <ul class="space-y-1 p-3 text-gray-200 text-sm" aria-labelledby="dropdownRadioButton">
+                                    <li>
+                                        <div class="flex items-center hover:bg-gray-600 p-2 rounded">
+                                            <input id="allDevices" type="radio" value="all" name="device"
+                                                class="border-gray-600 bg-gray-700 focus:ring-blue-600 focus:ring-2 ring-offset-gray-800 focus:ring-offset-gray-800 w-4 h-4"
+                                                checked>
+                                            <label for="allDevices" class="w-full font-medium
+                                                text-gray-300 text-sm ms-2">
+                                                All Devices
+                                            </label>
+                                        </div>
+                                    </li>
+                                    <% names.forEach(name=> { %>
+                                        <li>
+                                            <div class="flex items-center hover:bg-gray-600 p-2 rounded">
+                                                <input id=<%=name.number_plate%> type="radio" value=
+                                                <%=name.number_plate%>
+                                                    name="device"
+                                                    class="border-gray-600 bg-gray-700 focus:ring-blue-600 focus:ring-2
+                                                    ring-offset-gray-800 focus:ring-offset-gray-800 w-4 h-4">
+                                                    <label for=<%=name.number_plate%> class="w-full font-medium
+                                                        text-gray-300 text-sm ms-2">
+                                                        <%=name.number_plate%>
+                                                    </label>
+                                            </div>
+                                        </li>
+                                        <% }) %>
+                                </ul>
+                            </div>
+                        </div>
+                        <div>
+                            <button id="dropdownRadioButton" data-dropdown-toggle="dropdownRadio"
+                                class="inline-flex items-center bg-blue-700 hover:bg-blue-600 px-3 py-1.5 rounded-lg font-medium text-sm text-white focus:outline-none"
+                                type="button">
+                                Choose an Event
+                                <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                    fill="none" viewBox="0 0 10 6">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="m1 1 4 4 4-4" />
+                                </svg>
+                            </button>
+                            <!-- Dropdown menu -->
+                            <div id="dropdownRadio"
+                                class="z-[1009] hidden bg-gray-700 shadow rounded-lg divide-y divide-gray-600 w-48"
+                                data-popper-reference-hidden="" data-popper-escaped="" data-popper-placement="top"
+                                style="position: absolute; inset: auto auto 0px 0px; margin: 0px; transform: translate3d(522.5px, 3847.5px, 0px);">
+                                <ul class="space-y-1 p-3 text-gray-200 text-sm" aria-labelledby="dropdownRadioButton">
+                                    <li>
+                                        <div class="flex items-center hover:bg-gray-600 p-2 rounded">
+                                            <input id="all" type="radio" value="all" name="event" checked=""
+                                                class="border-gray-600 bg-gray-700 focus:ring-blue-600 focus:ring-2 ring-offset-gray-800 focus:ring-offset-gray-800 w-4 h-4">
+                                            <label for="all" class="w-full font-medium text-gray-300 text-sm ms-2">
+                                                All Events
+                                            </label>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="flex items-center hover:bg-gray-600 p-2 rounded">
+                                            <input id="rise" type="radio" value="rise" name="event"
+                                                class="border-gray-600 bg-gray-700 focus:ring-blue-600 focus:ring-2 ring-offset-gray-800 focus:ring-offset-gray-800 w-4 h-4">
+                                            <label for="rise" class="w-full font-medium text-gray-300 text-sm ms-2">
+                                                Rise
+                                            </label>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="flex items-center hover:bg-gray-600 p-2 rounded">
+                                            <input id="drain" type="radio" value="drain" name="event"
+                                                class="border-gray-600 bg-gray-700 focus:ring-blue-600 focus:ring-2 ring-offset-gray-800 focus:ring-offset-gray-800 w-4 h-4">
+                                            <label for="drain" class="w-full font-medium text-gray-300 text-sm ms-2">
+                                                Drain
+                                            </label>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="flex items-center hover:bg-gray-600 p-2 rounded">
+                                            <input id="leak" type="radio" value="leak" name="event"
+                                                class="border-gray-600 bg-gray-700 focus:ring-blue-600 focus:ring-2 ring-offset-gray-800 focus:ring-offset-gray-800 w-4 h-4">
+                                            <label for="leak" class="w-full font-medium text-gray-300 text-sm ms-2">
+                                                Leak
+                                            </label>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="flex items-center hover:bg-gray-600 p-2 rounded">
+                                            <input id="stable" type="radio" value="stable" name="event"
+                                                class="border-gray-600 bg-gray-700 focus:ring-blue-600 focus:ring-2 ring-offset-gray-800 focus:ring-offset-gray-800 w-4 h-4">
+                                            <label for="stable" class="w-full font-medium text-gray-300 text-sm ms-2">
+                                                Stable
+                                            </label>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+                    <button
+                        class="bg-blue-600 hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-700 disabled:opacity-50 shadow-md hover:shadow-lg focus:shadow-none active:shadow-none disabled:shadow-none ml-2 px-4 py-2 border border-transparent rounded-md text-center text-sm text-white transition-all disabled:pointer-events-none"
+                        type="button" id="select">
+                        Load Data
+                    </button>
+                    <button id="loading"
+                        class="items-center hidden bg-blue-700 hover:bg-blue-800 dark:hover:bg-blue-700 dark:bg-blue-600 px-5 py-2.5 rounded-lg focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 font-medium text-center text-sm text-white focus:outline-none me-2">
+                        <svg aria-hidden="true" role="status" class="inline w-4 h-4 text-white animate-spin me-3"
+                            viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                                fill="#E5E7EB" />
+                            <path
+                                d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                                fill="currentColor" />
+                        </svg>
+                        Loading...
+                    </button>
+                </section>
+                <% } %>
+                    <div id="myGrid" class="h-[400px] hidden mx-10"></div>
+        </main>
+</body>
+<!-- 1. Flowbite Script -->
+<script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+<!-- 2. flowbite script -->
+<script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+<script src="/JavaScript/records/index.js"></script>
+
+</html>
