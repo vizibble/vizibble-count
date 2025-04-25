@@ -46,7 +46,6 @@ const handleDataFromDevice = async (req, res) => {
         }
         await insertTelemetryQuery(connectionID);
         emitToFrontend(req, { connectionID, deviceCount, timestamp });
-        console.log(`[${timestamp}] Data processed for ${connectionID}: ${deviceCount} counts`);
         return res.status(200).json({ message: "Data processed successfully" });
     } catch (error) {
         console.error(`[${timestamp}] Error processing data for ${connectionID}: ${error.message}`);

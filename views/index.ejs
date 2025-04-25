@@ -402,7 +402,6 @@
 
                         try {
                             const values = await dataManager.fetchDeviceData(state.selectedDevice);
-                            console.log(values)
                             state.chartData = [...values];
 
                             if (state.chartData.length > 0) {
