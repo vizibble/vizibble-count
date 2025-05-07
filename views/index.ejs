@@ -101,14 +101,16 @@
                     </section>
 
                     <!-- Widget container -->
-                    <div class="hidden flex sm:flex-row flex-col gap-4 mx-4 sm:mx-10 mt-4" id="widgets">
+                    <div class="hidden flex sm:flex-row flex-col gap-4 mx-4 sm:mx-10 mt-4" id="widgets" style="height: 100%;">
                         <div id="todayCounter"
-                            class="flex-1 bg-blue-800 shadow-lg p-4 rounded-lg sm:max-w-xs text-white text-center">
-                            <h3 class="font-semibold text-lg">Today's Pieces</h3>
-                            <div class="mt-2 font-bold text-3xl" id="todayHitCount">0</div>
-                            <div class="mt-1 text-blue-200 text-sm" id="lastUpdated"></div>
+                            class="flex flex-col bg-blue-800 shadow-lg p-4 rounded-lg sm:max-w-xs text-white text-center">
+                            <h3 class="font-semibold text-xl">Today's Pieces</h3>
+                            <div class="flex flex-1 justify-center items-center mt-2 font-bold text-9xl"
+                                id="todayHitCount">0</div>
+                            <div class="mt-1 text-blue-200 text-lg" id="lastUpdated"></div>
                         </div>
-                        <div id="hitsChart" class="flex-1 bg-white shadow-lg p-4 rounded-lg h-[400px]"></div>
+                        <div id="hitsChart" class="flex-1 bg-white shadow-lg p-4 rounded-lg"
+                            style="min-height: 400px; height: 100%;"></div>
                     </div>
         </main>
 

@@ -3,15 +3,17 @@ const client = require("../service/db");
 async function getDeviceData(connectionID) {
     const { rows } = await client.query(
         `SELECT
-    COUNT(t.device_id) AS count
-FROM
-    device_info d
-LEFT JOIN
-    telemetry_data t ON t.device_id = d.device_id
-    AND t.timestamp >= (CURRENT_DATE AT TIME ZONE 'Asia/Kolkata' AT TIME ZONE 'UTC')
-    AND t.timestamp < ((CURRENT_DATE + INTERVAL '1 day') AT TIME ZONE 'Asia/Kolkata' AT TIME ZONE 'UTC')
-WHERE
-    d.connection_id = $1
+            COUNT(t.device_id) AS count
+        FROM
+            device_info d
+        LEFT JOIN
+            telemetry_data t ON t.device_id = d.device_id
+        AND
+            t.timestamp >= (CURRENT_DATE AT TIME ZONE 'Asia/Kolkata' AT TIME ZONE 'UTC')
+        AND
+            t.timestamp < ((CURRENT_DATE + INTERVAL '1 day') AT TIME ZONE 'Asia/Kolkata' AT TIME ZONE 'UTC')
+        WHERE
+            d.connection_id = $1
         `,
         [connectionID]
     );
