@@ -58,10 +58,10 @@
                                     <li>
                                         <div
                                             class="flex items-center bg-white hover:bg-blue-50 p-3 rounded-xl transition-colors duration-200">
-                                            <input id="<%= name.id %>" type="radio"
+                                            <input id="<%= name.connection_id %>" type="radio"
                                                 value="<%= name.id %>" name="device"
                                                 class="focus:ring-blue-500 w-4 h-4 text-blue-600">
-                                            <label for="<%= name.id %>"
+                                            <label for="<%= name.connection_id %>"
                                                 class="ms-3 w-full font-medium text-gray-800 mono-font">
                                                 <%= name.connection_id %>
                                             </label>
@@ -80,7 +80,7 @@
                         </button>
 
                         <button id="loading"
-                            class="hidden justify-center items-center bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 rounded-xl w-full font-semibold text-white">
+                            class="hidden justify-center items-center bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 rounded-full w-full font-semibold text-white">
                             <svg aria-hidden="true" role="status" class="inline me-3 w-5 h-5 animate-spin"
                                 viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path fill="currentColor"

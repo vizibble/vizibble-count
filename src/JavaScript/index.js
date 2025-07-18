@@ -1,3 +1,6 @@
+let active_connection = null;
+let shift_count = null;
+
 function showModal(heading, text) {
     const modal = document.querySelector(".modal");
     modal.classList.remove("hidden");
@@ -242,7 +245,7 @@ function renderBarChart(data) {
         },
         yAxis: {
             type: "value",
-            name: "Production Count",
+            name: "Pieces",
             nameTextStyle: {
                 fontSize: 14,
                 fontWeight: 'bold',
@@ -314,17 +317,18 @@ function renderBarChart(data) {
 
 document.getElementById("select").addEventListener("click", async () => {
     const selectedRadio = document.querySelector('input[name="device"]:checked');
+    active_connection = selectedRadio.id;
     if (!selectedRadio) {
         showModal("No device selected!", "Please choose a device before fetching data.");
         return;
     }
 
-    const connectionID = selectedRadio.value;
+    const ID = selectedRadio.value;
     document.getElementById("select").classList.add("hidden");
     document.getElementById("loading").classList.remove("hidden");
 
     try {
-        const res = await fetch(`/widgets/data?device=${connectionID}`);
+        const res = await fetch(`/widgets/data?device=${ID}`);
         const response = await res.json();
 
         if (!res.ok || !response || !Array.isArray(response.data)) {
@@ -371,6 +375,7 @@ document.getElementById("select").addEventListener("click", async () => {
         });
         const shiftCount = Number(shiftData.reduce((sum, e) => sum + Number(e.count), 0));
         $('#shiftHitCount').sevenSeg({ value: shiftCount, digits: String(shiftCount).length, decimalPoint: false });
+        shift_count = shiftCount;
 
         document.getElementById("lastUpdated").innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
         document.getElementById("widgets").classList.remove("hidden");
@@ -384,4 +389,60 @@ document.getElementById("select").addEventListener("click", async () => {
         document.getElementById("loading").classList.add("hidden");
         document.getElementById("select").classList.remove("hidden");
     }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const socket = io();
+
+    socket.on('connect', () => {
+        console.log('Connected to server via WebSocket.');
+    });
+
+    socket.on('update', (data) => {
+        if (active_connection === data.connectionID) {
+            updateWidgets(data);
+        }
+    });
+
+    function updateWidgets(data) {
+        // Update total count
+        const todayCountEl = document.getElementById('todayCount');
+        const newTotalCount = parseInt(todayCountEl.innerText) + 1;
+        todayCountEl.innerText = newTotalCount;
+        $('#todayHitCount').sevenSeg({ value: newTotalCount, digits: String(newTotalCount).length, decimalPoint: false });
+
+        shift_count += 1;
+        $('#shiftHitCount').sevenSeg({ value: shift_count, digits: String(shift_count).length, decimalPoint: false });
+
+        // Update chart
+        const chart = echarts.getInstanceByDom(document.getElementById('hitsChart'));
+        if (chart) {
+            const options = chart.getOption();
+            const rawDate = new Date(data.timestamp);
+            const istDate = new Date(rawDate.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+
+            let hours = istDate.getHours();
+            const suffix = hours >= 12 ? 'pm' : 'am';
+            hours = hours % 12;
+            hours = hours === 0 ? 12 : hours;
+            const hourLabel = `${String(hours).padStart(2, '0')}:00 ${suffix}`;
+
+            const labelIndex = options.xAxis[0].data.indexOf(hourLabel);
+            if (labelIndex > -1) {
+                const currentCount = parseInt(options.series[0].data[labelIndex])
+                options.series[0].data[labelIndex] = currentCount + 1;
+            } else {
+                options.xAxis[0].data.push(hourLabel);
+                options.series[0].data.push(data.deviceCount);
+            }
+            chart.setOption(options);
+        }
+
+        // Update Last Updated Time
+        document.getElementById('lastUpdated').innerText = `Last updated: ${new Date(data.timestamp).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" })}`;
+    }
+
+    socket.on('disconnect', () => {
+        console.log('Disconnected from server.');
+    });
 });
