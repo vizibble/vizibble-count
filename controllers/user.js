@@ -1,4 +1,4 @@
-const { Get_Historical_Data, Get_All_Ids_Query } = require("../Database/Frontend.js");
+const { Get_Historical_Data, Get_All_Ids_Query } = require("../Database/user.js");
 require("dotenv").config()
 
 const displayHome = async (req, res) => {
@@ -16,9 +16,10 @@ const GetWidgetData = async (req, res) => {
     const { device } = req.query;
     try {
         const rows = await Get_Historical_Data(device);
+        console.log(rows);
         return res.status(200).json(rows);
     } catch (error) {
-        console.error(`[${new Date().toLocaleString("en-GB")}] Error retrieving data for device ${tanker}: ${error.message}`);
+        console.error(`[${new Date().toLocaleString("en-GB")}] Error retrieving data for device ${device}: ${error.message}`);
         return res.status(500).json({ error: error.message });
     }
 }

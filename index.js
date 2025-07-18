@@ -25,10 +25,10 @@ const io = new socket.Server(server)
 io.on("connection", (socket) => { app.set("socket", socket) })
 
 //Different Routes
-const Data_from_tanker_router = require("./routes/Data_from_device.js")
-app.use("/api", Data_from_tanker_router)
-const Frontend_Router = require("./routes/Frontend.js")
-app.use("/", Frontend_Router)
+const device = require("./routes/device.js")
+app.use("/api", device)
+const user = require("./routes/user.js")
+app.use("/", user)
 
 //Connecting the Database
 const client = require("./service/db.js")
