@@ -32,7 +32,6 @@ const handleDataFromDevice = async (req, res) => {
     const timestamp = getTimestamp();
     const redisKey = `count:${connectionID}`;
     let deviceCount = 0;
-    console.log("Hello")
     try {
         const redisValue = await redis.get(redisKey);
         if (redisValue !== null) {

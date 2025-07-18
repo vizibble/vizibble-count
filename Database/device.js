@@ -25,7 +25,7 @@ async function getDeviceData(connectionID) {
  */
 async function insertNewDeviceQuery(connectionID, name = "Unnamed Device") {
     await client.query(
-        `INSERT INTO devices (connection_id, name)
+        `INSERT INTO devices (connection_id)
         VALUES ($1, $2)`,
         [connectionID, name]
     );
