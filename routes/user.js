@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { displayHome, GetWidgetData } = require("../controllers/Frontend.js");
+const { displayHome, GetWidgetData } = require("../controllers/user.js");
 
 router.route("/")
     .get(displayHome);

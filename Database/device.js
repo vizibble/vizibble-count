@@ -3,15 +3,17 @@ const client = require("../service/db");
 async function getDeviceData(connectionID) {
     const { rows } = await client.query(
         `SELECT
-    COUNT(t.device_id) AS count
-FROM
-    device_info d
-LEFT JOIN
-    telemetry_data t ON t.device_id = d.device_id
-    AND t.timestamp >= (CURRENT_DATE AT TIME ZONE 'Asia/Kolkata' AT TIME ZONE 'UTC')
-    AND t.timestamp < ((CURRENT_DATE + INTERVAL '1 day') AT TIME ZONE 'Asia/Kolkata' AT TIME ZONE 'UTC')
-WHERE
-    d.connection_id = $1
+            COUNT(t.device_id) AS count
+        FROM
+            devices d
+        LEFT JOIN
+            telemetry t ON t.device_id = d.id
+        AND
+            t.timestamp >= (CURRENT_DATE AT TIME ZONE 'Asia/Kolkata' AT TIME ZONE 'UTC')
+        AND
+            t.timestamp < ((CURRENT_DATE + INTERVAL '1 day') AT TIME ZONE 'Asia/Kolkata' AT TIME ZONE 'UTC')
+        WHERE
+            d.connection_id = $1
         `,
         [connectionID]
     );
@@ -23,7 +25,7 @@ WHERE
  */
 async function insertNewDeviceQuery(connectionID, name = "Unnamed Device") {
     await client.query(
-        `INSERT INTO device_info (connection_id, device_name)
+        `INSERT INTO devices (connection_id, name)
         VALUES ($1, $2)`,
         [connectionID, name]
     );
@@ -34,8 +36,8 @@ async function insertNewDeviceQuery(connectionID, name = "Unnamed Device") {
  */
 async function insertTelemetryQuery(connectionID) {
     await client.query(
-        `INSERT INTO telemetry_data (device_id)
-         SELECT device_id FROM device_info WHERE connection_id = $1`,
+        `INSERT INTO telemetry (device_id)
+        SELECT id FROM devices WHERE connection_id = $1`,
         [connectionID]
     );
 }
