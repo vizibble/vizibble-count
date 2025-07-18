@@ -44,19 +44,45 @@ function renderLineChart(data) {
     chart.setOption({
         title: {
             text: "Today vs Yesterday",
-            left: "center"
+            left: "center",
+            textStyle: {
+                fontSize: 18,
+                fontWeight: 'bold',
+                color: '#1f2937'
+            }
         },
         tooltip: {
-            trigger: "axis"
+            trigger: "axis",
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            borderColor: '#e5e7eb',
+            borderWidth: 1,
+            textStyle: {
+                color: '#374151'
+            },
+            formatter: function (params) {
+                let tooltip = `<div style="font-weight: bold; margin-bottom: 5px;">${params[0].axisValue}</div>`;
+                params.forEach(param => {
+                    tooltip += `<div style="margin: 2px 0;">
+                        <span style="display: inline-block; width: 10px; height: 10px; background-color: ${param.color}; border-radius: 50%; margin-right: 5px;"></span>
+                        ${param.seriesName}: <strong>${param.value}</strong> pieces
+                    </div>`;
+                });
+                return tooltip;
+            }
         },
         legend: {
             data: ["Today", "Yesterday"],
-            top: 30
+            top: 40,
+            textStyle: {
+                fontSize: 14,
+                fontWeight: 'bold'
+            }
         },
         grid: {
             left: "3%",
             right: "4%",
-            bottom: "8%",
+            bottom: "12%",
+            top: "20%",
             containLabel: true
         },
         xAxis: {
@@ -64,12 +90,38 @@ function renderLineChart(data) {
             data: labels,
             axisLabel: {
                 interval: 0,
-                rotate: 45
+                rotate: 45,
+                fontSize: 12,
+                color: '#6b7280'
+            },
+            axisLine: {
+                lineStyle: {
+                    color: '#d1d5db'
+                }
             }
         },
         yAxis: {
             type: 'value',
-            name: 'Total Pieces'
+            name: 'Pieces',
+            nameTextStyle: {
+                fontSize: 16,
+                fontWeight: 'bold',
+                color: '#374151'
+            },
+            axisLabel: {
+                fontSize: 12,
+                color: '#6b7280'
+            },
+            axisLine: {
+                lineStyle: {
+                    color: '#d1d5db'
+                }
+            },
+            splitLine: {
+                lineStyle: {
+                    color: '#f3f4f6'
+                }
+            }
         },
         series: [
             {
@@ -78,9 +130,30 @@ function renderLineChart(data) {
                 data: todayHits,
                 smooth: true,
                 symbol: 'circle',
-                symbolSize: 6,
-                itemStyle: { color: '#4CAF50' },
-                lineStyle: { width: 3 }
+                symbolSize: 8,
+                itemStyle: {
+                    color: '#3b82f6',
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                },
+                lineStyle: {
+                    width: 4,
+                    color: '#3b82f6'
+                },
+                areaStyle: {
+                    color: {
+                        type: 'linear',
+                        x: 0,
+                        y: 0,
+                        x2: 0,
+                        y2: 1,
+                        colorStops: [{
+                            offset: 0, color: 'rgba(59, 130, 246, 0.3)'
+                        }, {
+                            offset: 1, color: 'rgba(59, 130, 246, 0.1)'
+                        }]
+                    }
+                }
             },
             {
                 name: 'Yesterday',
@@ -89,11 +162,24 @@ function renderLineChart(data) {
                 smooth: true,
                 symbol: 'circle',
                 symbolSize: 6,
-                itemStyle: { color: '#999' },
-                lineStyle: { type: 'dashed', width: 2 }
+                itemStyle: {
+                    color: '#9ca3af',
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                },
+                lineStyle: {
+                    type: 'dashed',
+                    width: 3,
+                    color: '#9ca3af'
+                }
             }
         ]
     });
+    // Make chart responsive
+    window.addEventListener('resize', () => {
+        chart.resize();
+    });
+
 }
 
 function renderBarChart(data) {
@@ -110,40 +196,119 @@ function renderBarChart(data) {
 
     chart.setOption({
         title: {
-            text: "Today's Hourly Hits",
-            left: "center"
+            text: "Today's Production",
+            left: "center",
+            textStyle: {
+                fontSize: 18,
+                fontWeight: 'bold',
+                color: '#1f2937'
+            }
         },
         tooltip: {
             trigger: "axis",
-            axisPointer: { type: "shadow" }
+            axisPointer: { type: "shadow" },
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            borderColor: '#e5e7eb',
+            borderWidth: 1,
+            textStyle: {
+                color: '#374151'
+            },
+            formatter: function (params) {
+                const param = params[0];
+                return `<div style="font-weight: bold; margin-bottom: 5px;">${param.axisValue}</div>
+                        <div>Production: <strong>${param.value}</strong> pieces</div>`;
+            }
         },
         grid: {
             left: "3%",
             right: "4%",
-            bottom: "8%",
+            bottom: "12%",
+            top: "15%",
             containLabel: true
         },
         xAxis: {
             type: "category",
             data: labels,
-            axisLabel: { rotate: 45 }
+            axisLabel: {
+                rotate: 45,
+                fontSize: 12,
+                color: '#6b7280'
+            },
+            axisLine: {
+                lineStyle: {
+                    color: '#d1d5db'
+                }
+            }
         },
         yAxis: {
             type: "value",
-            name: "Hits"
+            name: "Production Count",
+            nameTextStyle: {
+                fontSize: 14,
+                fontWeight: 'bold',
+                color: '#374151'
+            },
+            axisLabel: {
+                fontSize: 12,
+                color: '#6b7280'
+            },
+            axisLine: {
+                lineStyle: {
+                    color: '#d1d5db'
+                }
+            },
+            splitLine: {
+                lineStyle: {
+                    color: '#f3f4f6'
+                }
+            }
         },
         series: [
             {
-                name: "Hits",
+                name: "Production",
                 type: "bar",
                 data: hits,
                 itemStyle: {
-                    color: "#4CAF50",
-                    borderRadius: [4, 4, 0, 0]
+                    color: {
+                        type: 'linear',
+                        x: 0,
+                        y: 0,
+                        x2: 0,
+                        y2: 1,
+                        colorStops: [{
+                            offset: 0, color: '#3b82f6'
+                        }, {
+                            offset: 1, color: '#1e40af'
+                        }]
+                    },
+                    borderRadius: [10, 10, 0, 0],
+                    shadowColor: 'rgba(0, 0, 0, 0.1)',
+                    shadowBlur: 10
                 },
-                barWidth: "60%"
+                barWidth: "80%",
+                emphasis: {
+                    itemStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0,
+                            y: 0,
+                            x2: 0,
+                            y2: 1,
+                            colorStops: [{
+                                offset: 0, color: '#60a5fa'
+                            }, {
+                                offset: 1, color: '#3b82f6'
+                            }]
+                        }
+                    }
+                }
             }
         ]
+    });
+
+    // Make chart responsive
+    window.addEventListener('resize', () => {
+        chart.resize();
     });
 }
 
@@ -175,7 +340,7 @@ document.getElementById("select").addEventListener("click", async () => {
         document.getElementById("metaProduct").innerText = meta.product || "–";
 
         // Update Count Info
-        document.getElementById("todayHitCount").innerText = comparison.today || 0;
+        $('#todayHitCount').sevenSeg({ value: comparison.today, digits: String(comparison.today).length, decimalPoint: false });
         document.getElementById("todayCount").innerText = comparison.today || 0;
         document.getElementById("yesterdayCount").innerText = comparison.yesterday || 0;
         document.getElementById("percentageDiff").innerText = `${Math.abs(comparison.percentage).toFixed(1)}%`;
@@ -205,8 +370,8 @@ document.getElementById("select").addEventListener("click", async () => {
             );
         });
 
-        const shiftCount = shiftData.reduce((sum, e) => sum + e.todayHits, 0);
-        document.getElementById("shiftHitCount").innerText = shiftCount;
+        const shiftCount = Number(shiftData.reduce((sum, e) => sum + e.todayHits, 0));
+        $('#shiftHitCount').sevenSeg({ value: shiftCount, digits: String(shiftCount).length, decimalPoint: false });
 
         document.getElementById("lastUpdated").innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
         document.getElementById("widgets").classList.remove("hidden");
