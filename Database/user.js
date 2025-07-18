@@ -1,32 +1,76 @@
 const client = require("../service/db");
 
-const Get_Historical_Data = async (connectionID) => {
-    const [hitsRows, meta] = await Promise.all([
-        GetTelemetryHits(connectionID),
-        GetDeviceMeta(connectionID)
-    ]);
+function getISTDates() {
+    const now = new Date();
 
+    const formatter = new Intl.DateTimeFormat("en-IN", {
+        timeZone: "Asia/Kolkata",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        hour12: false
+    });
+
+    const parts = formatter.formatToParts(now);
+    const year = parts.find(p => p.type === 'year').value;
+    const month = parts.find(p => p.type === 'month').value;
+    const day = parts.find(p => p.type === 'day').value;
+    const hour = parseInt(parts.find(p => p.type === 'hour').value);
+
+    let todayDate = new Date(`${year}-${month}-${day}T00:00:00`);
+    let today6AM, yesterday6AM;
+
+    if (hour >= 6) {
+        today6AM = new Date(todayDate);
+        yesterday6AM = new Date(todayDate);
+        yesterday6AM.setDate(yesterday6AM.getDate() - 1);
+    } else {
+        today6AM = new Date(todayDate);
+        today6AM.setDate(today6AM.getDate() - 1);
+        yesterday6AM = new Date(today6AM);
+        yesterday6AM.setDate(yesterday6AM.getDate() - 1);
+    }
+
+    function formatIST6AM(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d} 06:00:00`;
+    }
+
+    return {
+        current: formatIST6AM(today6AM),
+        previous: formatIST6AM(yesterday6AM)
+    };
+}
+
+const Get_Historical_Data = async (ID) => {
+    const { current, previous } = getISTDates();
+
+    const [currentHits, previousHits, meta] = await Promise.all([
+        GetTelemetryHits(ID, current),
+        GetTelemetryHits(ID, previous),
+        GetDeviceMeta(ID)
+    ]);
     let todayTotal = 0;
     let yesterdayTotal = 0;
 
-    const data = hitsRows.map(row => {
-        const todayHits = Number(row.hits_today);
-        const yesterdayHits = Number(row.hits_yesterday);
-        todayTotal += todayHits;
-        yesterdayTotal += yesterdayHits;
-        return {
-            hour: row.hour_slot_ist,
-            todayHits: todayHits,
-            yesterdayHits: yesterdayHits
-        };
-    });
+    for (const row of previousHits) {
+        const count = Number(row.count);
+        yesterdayTotal += count;
+    }
+    for (const row of currentHits) {
+        const count = Number(row.count);
+        todayTotal += count;
+    }
 
     const percentageDiff = yesterdayTotal > 0
         ? ((todayTotal - yesterdayTotal) / yesterdayTotal) * 100
         : todayTotal > 0 ? 100 : 0;
 
     return {
-        data,
+        data: currentHits,
         comparison: {
             today: todayTotal,
             yesterday: yesterdayTotal,
@@ -40,88 +84,74 @@ const Get_Historical_Data = async (connectionID) => {
     };
 };
 
-async function Get_All_Ids_Query() {
+const GetTelemetryHits = async (ID, startIST) => {
     try {
-        const { rows } = await client.query("SELECT connection_id FROM devices");
-        return rows;
-    }
-    catch (error) {
-        throw new Error(error.message);
-    }
-}
-
-const GetDeviceMeta = async (connectionID) => {
-    const query = `
-        SELECT
-            dd.product,
-            dd.operator,
-            dd.name as machine_name
-        FROM
-            device_details dd
-        JOIN
-            devices d ON d.id = dd.device_id
-        WHERE
-            d.connection_id = $1
-        LIMIT 1
-    `;
-    const result = await client.query(query, [connectionID]);
-    return result.rows[0] || null;
-};
-
-const GetTelemetryHits = async (connectionID) => {
-    const query = `
-        WITH hours AS (
-            SELECT generate_series(
-                date_trunc('day', now() AT TIME ZONE 'Asia/Kolkata') + INTERVAL '6 hour',
-                date_trunc('day', now() AT TIME ZONE 'Asia/Kolkata') + INTERVAL '30 hour' - INTERVAL '1 hour',
-                INTERVAL '1 hour'
-            ) AS hour_slot_ist
-        ),
-        telemetry_hits_today AS (
+        const query = `
+            WITH hours AS (
+                SELECT generate_series(
+                    $2::timestamp,
+                    $2::timestamp + interval '23 hours',
+                    interval '1 hour'
+                ) AS hour
+            ),
+            hits AS (
+                SELECT
+                    date_trunc('hour', timestamp AT TIME ZONE 'Asia/Kolkata') AS hour,
+                    COUNT(*) AS count
+                FROM
+                    telemetry
+                WHERE
+                    device_id = $1
+                    AND (timestamp AT TIME ZONE 'Asia/Kolkata') >= $2::timestamp
+                    AND (timestamp AT TIME ZONE 'Asia/Kolkata') < ($2::timestamp + interval '1 day')
+                GROUP BY
+                    1
+            )
             SELECT
-                date_trunc('hour', t.timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') AS hour_slot_ist,
-                COUNT(*) AS hits
-            FROM telemetry t
-            JOIN devices d ON d.id = t.device_id
-            WHERE d.connection_id = $1
-                AND t.timestamp >= (date_trunc('day', now() AT TIME ZONE 'Asia/Kolkata') + INTERVAL '6 hour') AT TIME ZONE 'Asia/Kolkata' AT TIME ZONE 'UTC'
-                AND t.timestamp < (date_trunc('day', now() AT TIME ZONE 'Asia/Kolkata') + INTERVAL '30 hour') AT TIME ZONE 'Asia/Kolkata' AT TIME ZONE 'UTC'
-                AND t.timestamp < now()
-            GROUP BY hour_slot_ist
-        ),
-        telemetry_hits_yesterday AS (
-            SELECT
-                date_trunc('hour', t.timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') AS hour_slot_ist,
-                COUNT(*) AS hits
+                to_char(h.hour, 'YYYY-MM-DD HH24:00:00') AS hour,
+                COALESCE(t.count, 0) AS count
             FROM
-                telemetry t
-            JOIN
-                devices d ON d.id = t.device_id
-            WHERE
-                d.connection_id = $1
-                AND t.timestamp >= (
-                    date_trunc('day', now() AT TIME ZONE 'Asia/Kolkata' - INTERVAL '1 day') + INTERVAL '6 hour'
-                ) AT TIME ZONE 'Asia/Kolkata' AT TIME ZONE 'UTC'
-                AND t.timestamp < (
-                    date_trunc('day', now() AT TIME ZONE 'Asia/Kolkata' - INTERVAL '1 day')
-                    + INTERVAL '6 hour'
-                    + (date_trunc('hour', now() AT TIME ZONE 'Asia/Kolkata') - date_trunc('day', now() AT TIME ZONE 'Asia/Kolkata'))
-                ) AT TIME ZONE 'Asia/Kolkata' AT TIME ZONE 'UTC'
-            GROUP BY
-                hour_slot_ist
-        )
-        SELECT
-            h.hour_slot_ist,
-            COALESCE(tht.hits, 0) AS hits_today,
-            COALESCE(thy.hits, 0) AS hits_yesterday
-        FROM hours h
-        LEFT JOIN telemetry_hits_today tht ON h.hour_slot_ist = tht.hour_slot_ist
-        LEFT JOIN telemetry_hits_yesterday thy ON h.hour_slot_ist = (thy.hour_slot_ist + INTERVAL '1 day')
-        ORDER BY h.hour_slot_ist
-    `;
-    const result = await client.query(query, [connectionID]);
-    return result.rows;
+                hours h
+                LEFT JOIN hits t ON h.hour = t.hour
+            ORDER BY
+                h.hour;
+        `;
+        const { rows } = await client.query(query, [ID, startIST]);
+        return rows;
+    } catch (error) {
+        throw new Error(error);
+    }
 };
 
+const GetDeviceMeta = async (ID) => {
+    try {
+        const query = `
+            SELECT
+                dd.product,
+                dd.operator,
+                dd.name as machine_name
+            FROM
+                device_details dd
+            JOIN
+                devices d ON d.id = dd.device_id
+            WHERE
+                d.id = $1
+            LIMIT 1;
+        `;
+        const result = await client.query(query, [ID]);
+        return result.rows[0] || {};
+    } catch (error) {
+        throw new Error(error);
+    }
+};
 
-module.exports = { Get_Historical_Data, Get_All_Ids_Query }
+const Get_All_Ids_Query = async () => {
+    try {
+        const { rows } = await client.query("SELECT connection_id, id FROM devices");
+        return rows;
+    } catch (error) {
+        throw new Error(error);
+    }
+};
+
+module.exports = { Get_Historical_Data, Get_All_Ids_Query };

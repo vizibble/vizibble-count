@@ -16,7 +16,6 @@ const GetWidgetData = async (req, res) => {
     const { device } = req.query;
     try {
         const rows = await Get_Historical_Data(device);
-        console.log(rows);
         return res.status(200).json(rows);
     } catch (error) {
         console.error(`[${new Date().toLocaleString("en-GB")}] Error retrieving data for device ${device}: ${error.message}`);

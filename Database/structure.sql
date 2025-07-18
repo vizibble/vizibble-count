@@ -12,17 +12,6 @@ CREATE TABLE device_details (
     product VARCHAR(255) NOT NULL
 );
 
-
-INSERT INTO
-    device_details (device_id, name, operator, product)
-VALUES
-    (
-        3,
-        'Pipe Fabrication Machine',
-        'Manufacturing Operations',
-        'PVC Pipe'
-    );
-
 CREATE TABLE daily_pieces (
     id BIGSERIAL PRIMARY KEY,
     device_id BIGINT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,

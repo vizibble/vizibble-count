@@ -185,14 +185,14 @@ function renderLineChart(data) {
 function renderBarChart(data) {
     const chart = echarts.init(document.getElementById("hitsChart"));
     const labels = data.map(entry =>
-        new Date(entry.hour).toLocaleTimeString("en-IN", {
+        new Date(entry.hour).toLocaleString("en-IN", {
             hour: "2-digit",
             minute: "2-digit",
             hour12: true,
             timeZone: "Asia/Kolkata"
         })
     );
-    const hits = data.map(entry => entry.todayHits);
+    const hits = data.map(entry => entry.count);
 
     chart.setOption({
         title: {
@@ -369,15 +369,14 @@ document.getElementById("select").addEventListener("click", async () => {
                 ((currentHour >= 22 || currentHour < 6) && (hourIST >= 22 || hourIST < 6))
             );
         });
-
-        const shiftCount = Number(shiftData.reduce((sum, e) => sum + e.todayHits, 0));
+        const shiftCount = Number(shiftData.reduce((sum, e) => sum + Number(e.count), 0));
         $('#shiftHitCount').sevenSeg({ value: shiftCount, digits: String(shiftCount).length, decimalPoint: false });
 
         document.getElementById("lastUpdated").innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
         document.getElementById("widgets").classList.remove("hidden");
 
         renderBarChart(data);
-        renderLineChart(data);
+        // renderLineChart(data);
     } catch (err) {
         console.error("Error fetching widget data:", err.message);
         showModal("Fetch Error", err.message || "Something went wrong.");

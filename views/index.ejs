@@ -58,10 +58,10 @@
                                     <li>
                                         <div
                                             class="flex items-center bg-white hover:bg-blue-50 p-3 rounded-xl transition-colors duration-200">
-                                            <input id="<%= name.connection_id %>" type="radio"
-                                                value="<%= name.connection_id %>" name="device"
+                                            <input id="<%= name.id %>" type="radio"
+                                                value="<%= name.id %>" name="device"
                                                 class="focus:ring-blue-500 w-4 h-4 text-blue-600">
-                                            <label for="<%= name.connection_id %>"
+                                            <label for="<%= name.id %>"
                                                 class="ms-3 w-full font-medium text-gray-800 mono-font">
                                                 <%= name.connection_id %>
                                             </label>
@@ -203,9 +203,9 @@
                         <div id="hitsChart" class="bg-white shadow-sm p-4 rounded-lg"
                             style="min-height: 400px; height: 100%;">
                         </div>
-                        <div id="lineChart" class="bg-white shadow-sm p-4 rounded-lg"
+                        <!-- <div id="lineChart" class="bg-white shadow-sm p-4 rounded-lg"
                             style="min-height: 400px; height: 100%;">
-                        </div>
+                        </div> -->
                     </div>
         </main>
 </body>
