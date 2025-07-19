@@ -3,6 +3,7 @@ const { getDeviceData, insertNewDeviceQuery, insertTelemetryQuery } = require(".
 
 function emitToFrontend(req, data) {
     try {
+        console.log("hello in backend")
         const socket = req.app.get('socket');
         if (socket) socket.emit("update", data);
         else console.warn(`[${getISTTime()}] No socket connection for device ${data.connectionID}.`);

@@ -266,6 +266,14 @@ function renderBarChart(data) {
                 }
             }
         },
+        dataZoom: [
+            {
+                type: 'slider',
+                show: true,
+                start: 0,
+                end: window.innerWidth < 480 ? 30 : 100
+            }
+        ],
         series: [
             {
                 name: "Production",
@@ -399,6 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     socket.on('update', (data) => {
+        console.log("hello in frontend")
         if (active_connection === data.connectionID) {
             updateWidgets(data);
         }
