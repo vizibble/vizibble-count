@@ -25,9 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#shiftHitCount').sevenSeg({ value: newShiftCount, digits: String(newShiftCount).length, decimalPoint: false });
 
         // Update chart
-        const chart = echarts.getInstanceByDom(document.getElementById('hitsChart'));
-        if (chart) {
-            const options = chart.getOption();
+        const hitsChart = echarts.getInstanceByDom(document.getElementById('hitsChart'));
+        if (hitsChart) {
+            const options = hitsChart.getOption();
             const rawDate = new Date(data.timestamp);
             const istDate = new Date(rawDate.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
 
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 options.xAxis[0].data.push(hourLabel);
                 options.series[0].data.push(data.deviceCount);
             }
-            chart.setOption(options);
+            hitsChart.setOption(options);
         }
 
         // Update Last Updated Time
