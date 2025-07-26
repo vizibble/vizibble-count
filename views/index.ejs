@@ -58,9 +58,8 @@
                                     <li>
                                         <div
                                             class="flex items-center bg-white hover:bg-blue-50 p-3 rounded-xl transition-colors duration-200">
-                                            <input id="<%= name.connection_id %>" type="radio"
-                                                value="<%= name.id %>" name="device"
-                                                class="focus:ring-blue-500 w-4 h-4 text-blue-600">
+                                            <input id="<%= name.connection_id %>" type="radio" value="<%= name.id %>"
+                                                name="device" class="focus:ring-blue-500 w-4 h-4 text-blue-600">
                                             <label for="<%= name.connection_id %>"
                                                 class="ms-3 w-full font-medium text-gray-800 mono-font">
                                                 <%= name.connection_id %>
@@ -113,7 +112,7 @@
                         </div>
                     </section>
 
-                    <div class="hidden flex flex-col gap-8 px-4 md:px-10" id="widgets">
+                    <div class="hidden flex-col gap-8 px-4 md:px-10" id="widgets">
                         <div class="gap-2 grid grid-cols-1 lg:grid-cols-3">
                             <!-- Machine Info Card -->
                             <div class="bg-gradient-to-br from-white to-blue-50 shadow-md p-6 rounded-2xl">
@@ -128,11 +127,13 @@
                                 <div class="space-y-3 text-sm sm:text-base">
                                     <div class="flex justify-between gap-2">
                                         <span class="font-medium text-gray-600">Shift:</span>
-                                        <span id="metaShift" class="font-semibold text-blue-600 text-right mono-font">–</span>
+                                        <span id="metaShift"
+                                            class="font-semibold text-blue-600 text-right mono-font">–</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="font-medium text-gray-600">Machine:</span>
-                                        <span id="metaMachine" class="font-semibold text-gray-900 text-right mono-font">–</span>
+                                        <span id="metaMachine"
+                                            class="font-semibold text-gray-900 text-right mono-font">–</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="font-medium text-gray-600">Operator:</span>
@@ -189,7 +190,7 @@
                                         <span id="yesterdayCount"
                                             class="font-bold text-gray-500 sm:text-2xl mono-font">0</span>
                                     </div>
-                                    <div class="flex justify-between items-center pt-2 border-t">
+                                    <div class="flex justify-between items-center pt-2.5 border-t">
                                         <span class="text-gray-600">Change</span>
                                         <div class="flex items-center space-x-2">
                                             <span id="trendIcon" class="sm:text-2xl">→</span>
@@ -219,6 +220,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sevenSeg.js/0.2.0/sevenSeg.js"
     integrity="sha512-n8qUWLnN2oiBRmyxXwgKUfOqqOOv70jB6qyOi1aiaITUgJQ2Irr0WvmoYbCDdXDf2AeJPYUzLyMSfAURf8j2+g=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script type="module" src="/JavaScript/main.js"></script>
-
+<% if (locals.manifest) { %>
+    <script type="module" src="/<%= manifest['public/JavaScript/main.js'].file %>"></script>
+    <% } else { %>
+        <script type="module" src="/JavaScript/main.js"></script>
+        <% } %>
 </html>

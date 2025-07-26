@@ -1,3 +1,5 @@
+import { active_connection, shift_count, updateShiftCount } from '../api/api.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const socket = io();
 
@@ -18,8 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
         todayCountEl.innerText = newTotalCount;
         $('#todayHitCount').sevenSeg({ value: newTotalCount, digits: String(newTotalCount).length, decimalPoint: false });
 
-        shift_count += 1;
-        $('#shiftHitCount').sevenSeg({ value: shift_count, digits: String(shift_count).length, decimalPoint: false });
+        const newShiftCount = shift_count + 1;
+        updateShiftCount(newShiftCount);
+        $('#shiftHitCount').sevenSeg({ value: newShiftCount, digits: String(newShiftCount).length, decimalPoint: false });
 
         // Update chart
         const chart = echarts.getInstanceByDom(document.getElementById('hitsChart'));

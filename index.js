@@ -1,6 +1,8 @@
+
 //Express Setup
 const express = require('express');
 const app = express();
+const fs = require('fs');
 
 //Using HTTP for socket.io
 const http = require("http")
@@ -17,7 +19,12 @@ app.use(express.urlencoded({ extended: false }));
 const path = require("path")
 app.set("view engine", "ejs")
 app.set("views", path.resolve("./views"))
-app.use(express.static(path.join(__dirname, 'src')))
+
+if (process.env.NODE_ENV == 'production') {
+    app.use(express.static(path.resolve(__dirname, 'dist')));
+} else {
+    app.use(express.static(path.join(__dirname, 'public')));
+}
 
 //Socket.io
 const socket = require("socket.io")
@@ -28,7 +35,15 @@ io.on("connection", (socket) => { app.set("socket", socket) })
 const device = require("./routes/device.js")
 app.use("/api", device)
 const user = require("./routes/user.js")
-app.use("/", user)
+
+app.use("/", (req, res, next) => {
+    if (process.env.NODE_ENV === 'production') {
+        const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'dist/.vite/manifest.json'), 'utf8'));
+        res.locals.manifest = manifest;
+    }
+    user(req, res, next);
+});
+
 
 //Connecting the Database
 const redis = require("./service/redis.js");

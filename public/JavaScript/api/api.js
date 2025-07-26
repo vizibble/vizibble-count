@@ -1,8 +1,12 @@
 import { renderBarChart, renderLineChart } from '../charts/charts.js';
 import { getCurrentShiftIST, showModal } from '../utils/utils.js';
 
-let active_connection = null;
-let shift_count = null;
+export let active_connection = "";
+export let shift_count = 0;
+
+export function updateShiftCount(newCount) {
+    shift_count = newCount;
+}
 
 document.getElementById("select").addEventListener("click", async () => {
     const selectedRadio = document.querySelector('input[name="device"]:checked');

@@ -4,8 +4,9 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   build: {
     outDir: 'dist',
+    manifest: true,
     rollupOptions: {
-      input: 'src/JavaScript/main.js',
+      input: 'public/JavaScript/main.js',
     },
   },
 });
