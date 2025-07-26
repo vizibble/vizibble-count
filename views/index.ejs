@@ -180,12 +180,12 @@
                                 </h3>
                                 <div class="space-y-4 text-sm sm:text-base">
                                     <div class="flex justify-between items-center">
-                                        <span class="text-gray-600">Today</span>
+                                        <span class="text-gray-600" id="performanceTodayDate"></span>
                                         <span id="todayCount"
                                             class="font-bold text-blue-600 sm:text-2xl mono-font">0</span>
                                     </div>
                                     <div class="flex justify-between items-center">
-                                        <span class="text-gray-600">Yesterday</span>
+                                        <span class="text-gray-600" id="performanceYesterdayDate"></span>
                                         <span id="yesterdayCount"
                                             class="font-bold text-gray-500 sm:text-2xl mono-font">0</span>
                                     </div>
@@ -203,9 +203,9 @@
                         <div id="hitsChart" class="bg-white shadow-sm p-4 rounded-lg"
                             style="min-height: 400px; height: 100%;">
                         </div>
-                        <!-- <div id="lineChart" class="bg-white shadow-sm p-4 rounded-lg"
+                        <div id="lineChart" class="bg-white shadow-sm p-4 rounded-lg"
                             style="min-height: 400px; height: 100%;">
-                        </div> -->
+                        </div>
                     </div>
         </main>
 </body>
@@ -219,6 +219,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sevenSeg.js/0.2.0/sevenSeg.js"
     integrity="sha512-n8qUWLnN2oiBRmyxXwgKUfOqqOOv70jB6qyOi1aiaITUgJQ2Irr0WvmoYbCDdXDf2AeJPYUzLyMSfAURf8j2+g=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="/JavaScript/index.js"></script>
+<script type="module" src="/JavaScript/main.js"></script>
 
 </html>

@@ -1,49 +1,5 @@
-const client = require("../service/db");
-
-function getISTDates() {
-    const now = new Date();
-
-    const formatter = new Intl.DateTimeFormat("en-IN", {
-        timeZone: "Asia/Kolkata",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        hour12: false
-    });
-
-    const parts = formatter.formatToParts(now);
-    const year = parts.find(p => p.type === 'year').value;
-    const month = parts.find(p => p.type === 'month').value;
-    const day = parts.find(p => p.type === 'day').value;
-    const hour = parseInt(parts.find(p => p.type === 'hour').value);
-
-    let todayDate = new Date(`${year}-${month}-${day}T00:00:00`);
-    let today6AM, yesterday6AM;
-
-    if (hour >= 6) {
-        today6AM = new Date(todayDate);
-        yesterday6AM = new Date(todayDate);
-        yesterday6AM.setDate(yesterday6AM.getDate() - 1);
-    } else {
-        today6AM = new Date(todayDate);
-        today6AM.setDate(today6AM.getDate() - 1);
-        yesterday6AM = new Date(today6AM);
-        yesterday6AM.setDate(yesterday6AM.getDate() - 1);
-    }
-
-    function formatIST6AM(dateObj) {
-        const y = dateObj.getFullYear();
-        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const d = String(dateObj.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d} 06:00:00`;
-    }
-
-    return {
-        current: formatIST6AM(today6AM),
-        previous: formatIST6AM(yesterday6AM)
-    };
-}
+const pool = require("../service/db");
+const { getISTDates, sumCounts } = require("./utils");
 
 const Get_Historical_Data = async (ID) => {
     const { current, previous } = getISTDates();
@@ -53,28 +9,28 @@ const Get_Historical_Data = async (ID) => {
         GetTelemetryHits(ID, previous),
         GetDeviceMeta(ID)
     ]);
-    let todayTotal = 0;
-    let yesterdayTotal = 0;
 
-    for (const row of previousHits) {
-        const count = Number(row.count);
-        yesterdayTotal += count;
-    }
-    for (const row of currentHits) {
-        const count = Number(row.count);
-        todayTotal += count;
-    }
+    const todayTotal = sumCounts(currentHits);
+    const yesterdayTotal = sumCounts(previousHits);
 
-    const percentageDiff = yesterdayTotal > 0
-        ? ((todayTotal - yesterdayTotal) / yesterdayTotal) * 100
-        : todayTotal > 0 ? 100 : 0;
+    const data = currentHits.map((entry, index) => {
+        return {
+            hour: entry.hour,
+            todayCount: Number(entry.count),
+            yesterdayCount: Number(previousHits[index].count)
+        };
+    })
+    const percentageDiff =
+        yesterdayTotal > 0
+            ? ((todayTotal - yesterdayTotal) / yesterdayTotal) * 100
+            : todayTotal > 0 ? 100 : 0;
 
     return {
-        data: currentHits,
+        data: data,
         comparison: {
             today: todayTotal,
             yesterday: yesterdayTotal,
-            percentage: percentageDiff
+            percentage: Number(percentageDiff.toFixed(2))
         },
         meta: {
             product: meta.product,
@@ -116,7 +72,7 @@ const GetTelemetryHits = async (ID, startIST) => {
             ORDER BY
                 h.hour;
         `;
-        const { rows } = await client.query(query, [ID, startIST]);
+        const { rows } = await pool.query(query, [ID, startIST]);
         return rows;
     } catch (error) {
         throw new Error(error);
@@ -138,7 +94,7 @@ const GetDeviceMeta = async (ID) => {
                 d.id = $1
             LIMIT 1;
         `;
-        const result = await client.query(query, [ID]);
+        const result = await pool.query(query, [ID]);
         return result.rows[0] || {};
     } catch (error) {
         throw new Error(error);
@@ -147,7 +103,7 @@ const GetDeviceMeta = async (ID) => {
 
 const Get_All_Ids_Query = async () => {
     try {
-        const { rows } = await client.query("SELECT connection_id, id FROM devices");
+        const { rows } = await pool.query("SELECT connection_id, id FROM devices");
         return rows;
     } catch (error) {
         throw new Error(error);

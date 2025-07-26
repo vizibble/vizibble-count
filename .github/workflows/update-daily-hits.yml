@@ -1,0 +1,32 @@
+name: Update Daily Pieces (IST 6AM)
+
+on:
+  schedule:
+    - cron: '40 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-daily-pieces:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install PostgreSQL CLI
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Run INSERT aggregation via psql
+        run: |
+          echo "Running aggregation query..."
+          psql "$DATABASE_URL" -c "
+            INSERT INTO daily_pieces (device_id, date, total_pieces)
+            SELECT
+              device_id,
+              DATE((timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') - INTERVAL '6 hours') AS ist_date,
+              COUNT(*) AS total
+            FROM telemetry
+            WHERE timestamp >= NOW() - INTERVAL '1 day'
+            GROUP BY device_id, ist_date
+            ON CONFLICT (device_id, date) DO UPDATE
+            SET total_pieces = EXCLUDED.total_pieces;
+          "
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

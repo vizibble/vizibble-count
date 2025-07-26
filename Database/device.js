@@ -1,8 +1,9 @@
-const client = require("../service/db");
+const pool = require("../service/db");
 
 async function getDeviceData(connectionID) {
-    const { rows } = await client.query(
-        `SELECT
+    try {
+        const { rows } = await pool.query(
+            `SELECT
             COUNT(t.device_id) AS count
         FROM
             devices d
@@ -15,31 +16,42 @@ async function getDeviceData(connectionID) {
         WHERE
             d.connection_id = $1
         `,
-        [connectionID]
-    );
-    return rows[0].count > 0 ? rows[0] : null;
+            [connectionID]
+        );
+        return rows[0].count > 0 ? rows[0] : null;
+    } catch (error) {
+        throw new Error(error)
+    }
 }
 
 /**
  * Insert a new device into device_info table.
  */
-async function insertNewDeviceQuery(connectionID, name = "Unnamed Device") {
-    await client.query(
-        `INSERT INTO devices (connection_id)
-        VALUES ($1)`,
-        [connectionID]
-    );
+async function insertNewDeviceQuery(connectionID) {
+    try {
+        await pool.query(
+            `INSERT INTO devices (connection_id)
+            VALUES ($1)`,
+            [connectionID]
+        );
+    } catch (error) {
+        throw new Error(error)
+    }
 }
 
 /**
  * Insert a telemetry record for the given device using its connection ID.
  */
 async function insertTelemetryQuery(connectionID) {
-    await client.query(
-        `INSERT INTO telemetry (device_id)
-        SELECT id FROM devices WHERE connection_id = $1`,
-        [connectionID]
-    );
+    try {
+        await pool.query(
+            `INSERT INTO telemetry (device_id)
+            SELECT id FROM devices WHERE connection_id = $1`,
+            [connectionID]
+        );
+    } catch (error) {
+        throw new Error(error)
+    }
 }
 
 module.exports = {

@@ -1,10 +1,13 @@
-const Client = require("pg").Client;
+const { Pool } = require("pg");
 require("dotenv").config();
 
-const client = new Client({
+const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: true }
 });
 
+pool.on("error", (err) => {
+    console.error("❌ PG Pool error:", err.message);
+});
 
-module.exports = client
+module.exports = pool

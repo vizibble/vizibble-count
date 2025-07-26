@@ -31,13 +31,9 @@ const user = require("./routes/user.js")
 app.use("/", user)
 
 //Connecting the Database
-const client = require("./service/db.js")
 const redis = require("./service/redis.js");
 redis.on('connect', () => { console.log('Connected to Redis') });
-redis.on('error', (err) => { console.error('Redis client encountered an error:', err) });
-client.connect()
-    .then(() => console.log('Connected to PostgreSQL'))
-    .catch(err => console.error('Connection error', err.stack));
+redis.on('error', (err) => { console.error('Redis pool encountered an error:', err) });
 
 //Starting the server
 const PORT = process.env.PORT || 8080
