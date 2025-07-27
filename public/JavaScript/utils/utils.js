@@ -56,3 +56,19 @@ export function getYesterday() {
     yesterday.setDate(today.getDate() - 1);
     return yesterday;
 }
+
+export function updateStatus(status) {
+    const statusEl = document.getElementById("metaStatus");
+    statusEl.classList.remove("status-low", "status-high", "status-on", "status-off");
+
+    switch (status.toUpperCase()) {
+        case "LOW":
+            statusEl.classList.add("status-low");
+            statusEl.innerText = 'INACTIVE';
+            break;
+        case "HIGH":
+            statusEl.classList.add("status-high");
+            statusEl.innerText = 'ACTIVE';
+            break;
+    }
+}

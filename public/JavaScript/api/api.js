@@ -1,5 +1,5 @@
 import { renderBarChart, renderLineChart } from '../charts/charts.js';
-import { getCurrentShiftIST, showModal } from '../utils/utils.js';
+import { getCurrentShiftIST, showModal, updateStatus } from '../utils/utils.js';
 
 export let active_connection = "";
 export let shift_count = 0;
@@ -35,6 +35,7 @@ document.getElementById("select").addEventListener("click", async () => {
         document.getElementById("metaMachine").innerText = meta.machine_name || "–";
         document.getElementById("metaOperator").innerText = meta.operator || "–";
         document.getElementById("metaProduct").innerText = meta.product || "–";
+        updateStatus('HIGH')
 
         // Update Count Info
         $('#todayHitCount').sevenSeg({ value: comparison.today, digits: String(comparison.today).length, decimalPoint: false });

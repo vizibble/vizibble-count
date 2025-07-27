@@ -1,4 +1,5 @@
 import { active_connection, shift_count, updateShiftCount } from '../api/api.js';
+import { updateStatus } from '../utils/utils.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const socket = io();
@@ -13,6 +14,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    socket.on('status', (data) => {
+        if (active_connection == data.connectionID) {
+            updateStatus('LOW')
+        }
+    })
+
     function updateWidgets(data) {
         // Update total count
         const todayCountEl = document.getElementById('todayCount');
@@ -24,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateShiftCount(newShiftCount);
         $('#shiftHitCount').sevenSeg({ value: newShiftCount, digits: String(newShiftCount).length, decimalPoint: false });
 
+        updateStatus('HIGH')
         // Update chart
         const hitsChart = echarts.getInstanceByDom(document.getElementById('hitsChart'));
         if (hitsChart) {

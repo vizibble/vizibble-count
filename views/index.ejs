@@ -30,6 +30,28 @@
             align-items: center;
             justify-content: center;
         }
+
+        .status-badge {
+            margin-left: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            border: 1px solid;
+            transition: all 0.3s;
+        }
+
+        .status-high {
+            background-color: #d1fae5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+
+        .status-low {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border-color: #fecaca;
+        }
     </style>
 </head>
 
@@ -143,6 +165,10 @@
                                         <span class="font-medium text-gray-600">Product:</span>
                                         <span id="metaProduct" class="font-semibold text-gray-900 text-right">–</span>
                                     </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-medium text-gray-600">Status:</span>
+                                        <span id="metaStatus" class="status-badge">–</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -227,4 +253,5 @@
     <% } else { %>
         <script type="module" src="/JavaScript/main.js"></script>
         <% } %>
+
 </html>
