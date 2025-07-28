@@ -1,4 +1,4 @@
-const { Get_Historical_Data, Get_All_Ids_Query } = require("../Database/user.js");
+const { Get_Historical_Data, Get_All_Ids_Query, Get_Records_Data } = require("../Database/user.js");
 require("dotenv").config()
 
 const displayHome = async (req, res) => {
@@ -23,4 +23,14 @@ const GetWidgetData = async (req, res) => {
     }
 }
 
-module.exports = { displayHome, GetWidgetData };
+const getRecords = async (req, res) => {
+    try {
+        const data = await Get_Records_Data();
+        return res.status(200).json(data);
+    } catch (error) {
+        console.error(`[${new Date().toLocaleString("en-GB")}] Error retrieving records for device ${device}: ${error.message}`);
+        return res.status(500).json({ error: error.message });
+    }
+}
+
+module.exports = { displayHome, GetWidgetData, getRecords };

@@ -110,4 +110,24 @@ const Get_All_Ids_Query = async () => {
     }
 };
 
-module.exports = { Get_Historical_Data, Get_All_Ids_Query };
+const Get_Records_Data = async () => {
+    try {
+        const query = `
+                SELECT
+                    dd.name AS name,
+                    dp.id AS id,
+                    dp.date AS date,
+                    dp.total_pieces AS count
+                FROM
+                    daily_pieces dp
+                JOIN
+                    device_details dd ON dd.device_id = dp.device_id;
+            `;
+        const result = await pool.query(query);
+        return result.rows;
+    } catch (error) {
+        throw new Error(error);
+    }
+};
+
+module.exports = { Get_Historical_Data, Get_All_Ids_Query, Get_Records_Data };

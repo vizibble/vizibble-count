@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "style": "npx tailwindcss -i ./src/CSS/input.css -o ./src/CSS/output.css --watch",
-    "start": "node index.js",
+    "style": "npx tailwindcss -i ./public/CSS/input.css -o ./public/CSS/output.css --watch",
+    "start": "nodemon index.js",
     "dev": "vite",
     "build": "vite build"
   },

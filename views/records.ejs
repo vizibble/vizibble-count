@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vizibble | Records</title>
+    <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/CSS/output.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .mono-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-200 text-gray-800">
+    <%- include('includes/navbar.ejs') %>
+        <main class="p-10">
+
+            <div id="wrapper"></div>
+
+            <!-- Alert Notification Modal -->
+            <section
+                class="hidden top-5 left-1/2 z-[9999] fixed opacity-0 transition-all -translate-x-1/2 translate-y-4 duration-300 modal">
+                <div
+                    class="flex items-center bg-white shadow-lg p-4 border-red-500 border-l-8 rounded-2xl w-[90vw] w-fit overflow-hidden">
+                    <div class="flex justify-center items-center bg-red-100 rounded-full size-14">
+                        <svg class="size-7 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h5 class="font-semibold text-red-600 text-lg status_alert_heading"></h5>
+                        <p class="text-gray-700 text-sm status_text"></p>
+                    </div>
+                </div>
+            </section>
+        </main>
+</body>
+
+<script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+
+<script>
+    new gridjs.Grid({
+        pagination: {
+            limit: 20
+        },
+        search: true,
+        columns: ["Date", "Name", "Total Production"],
+        server: {
+            url: '/records/data',
+            then: data => data.map(entry => [
+                new Date(entry.date).toLocaleString("en-IN", {
+                    timeZone: "Asia/Kolkata",
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                }),
+                entry.name,
+                entry.count
+            ])
+        },
+        style: {
+            table: {
+                'border-radius': '30px'
+            },
+            th: {
+                'background-color': '#2563eb',
+                color: '#fff',
+                'border-bottom': '3px solid #1d4ed8',
+                'text-align': 'center',
+                'padding': '8px',
+            },
+            td: {
+                'text-align': 'center',
+                'padding': '8px',
+                'font-family': 'JetBrains Mono'
+            }
+        }
+    }).render(document.getElementById("wrapper"));
+</script>
+
+</html>
