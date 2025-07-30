@@ -44,12 +44,6 @@ app.use("/", (req, res, next) => {
     user(req, res, next);
 });
 
-
-//Connecting the Database
-const redis = require("./service/redis.js");
-redis.on('connect', () => { console.log('Connected to Redis') });
-redis.on('error', (err) => { console.error('Redis pool encountered an error:', err) });
-
 //Starting the server
 const PORT = process.env.PORT || 8080
 server.listen(PORT, () => console.log(`Server Started at ${PORT}`))

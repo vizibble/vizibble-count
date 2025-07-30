@@ -2,30 +2,24 @@ const pool = require("../service/db");
 
 async function getDeviceData(connectionID) {
     try {
-        const { rows } = await pool.query(
-            `SELECT
-            COUNT(t.device_id) AS count
+        const { rows } = await pool.query(`
+        SELECT
+            id
         FROM
             devices d
-        LEFT JOIN
-            telemetry t ON t.device_id = d.id
-        AND
-            t.timestamp >= (CURRENT_DATE AT TIME ZONE 'Asia/Kolkata' AT TIME ZONE 'UTC')
-        AND
-            t.timestamp < ((CURRENT_DATE + INTERVAL '1 day') AT TIME ZONE 'Asia/Kolkata' AT TIME ZONE 'UTC')
         WHERE
             d.connection_id = $1
         `,
             [connectionID]
         );
-        return rows[0].count > 0 ? rows[0] : null;
+        return rows.length > 0 ? true: false;
     } catch (error) {
         throw new Error(error)
     }
 }
 
 /**
- * Insert a new device into device_info table.
+ * Insert a new device into devices table.
  */
 async function insertNewDeviceQuery(connectionID) {
     try {

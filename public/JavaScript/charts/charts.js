@@ -103,6 +103,14 @@ export function renderLineChart(data) {
                 }
             }
         },
+        dataZoom: [
+            {
+                type: 'slider',
+                show: true,
+                start: 0,
+                end: window.innerWidth < 480 ? 10 : 100
+            }
+        ],
         series: [
             {
                 name: getFormattedDate(today),
