@@ -36,13 +36,12 @@ const handleDataFromDevice = async (req, res) => {
         }
 
         const deviceData = await getDeviceData(connectionID);
-        if (deviceData) {
+        if (!deviceData) {
             await insertNewDeviceQuery(connectionID, `Device ${connectionID}`);
         }
 
         await insertTelemetryQuery(connectionID);
         emitToFrontend(req, { connectionID, timestamp }, "update");
-
         return res.status(200).json({ message: "Data processed successfully" });
     } catch (error) {
         console.error(`[${timestamp}] Error processing data for device ${connectionID}: ${error.message}`);

@@ -20,7 +20,7 @@ jobs:
             INSERT INTO daily_pieces (device_id, date, total_pieces)
             SELECT
               device_id,
-              DATE((timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') - INTERVAL '6 hours') AS ist_date,
+              DATE((timestamp AT TIME ZONE 'Asia/Kolkata') - INTERVAL '6 hours') AS ist_date,
               COUNT(*) AS total
             FROM telemetry
             WHERE timestamp >= NOW() - INTERVAL '1 day'
