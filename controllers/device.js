@@ -20,15 +20,6 @@ const handleDataFromDevice = async (req, res) => {
     const { status } = req.body;
     const timestamp = getTimestamp();
 
-    const now = Date.now();
-    const lastRequestTime = deviceLastRequest.get(connectionID);
-
-    if (lastRequestTime && now - lastRequestTime < 30000) {
-        return res.status(429).json({ error: "Too many requests. Please wait 30 seconds." });
-    }
-
-    deviceLastRequest.set(connectionID, now);
-
     try {
         if (status === 'LOW') {
             emitToFrontend(req, { connectionID }, "status");
@@ -39,6 +30,13 @@ const handleDataFromDevice = async (req, res) => {
         if (!deviceData) {
             await insertNewDeviceQuery(connectionID, `Device ${connectionID}`);
         }
+
+        const now = Date.now();
+        const lastRequestTime = deviceLastRequest.get(connectionID);
+        if (lastRequestTime && now - lastRequestTime < 30000) {
+            return res.status(200).json({ message: "Too many requests. Please wait 30 seconds." });
+        }
+        deviceLastRequest.set(connectionID, now);
 
         await insertTelemetryQuery(connectionID);
         emitToFrontend(req, { connectionID, timestamp }, "update");
