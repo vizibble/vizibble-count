@@ -34,7 +34,7 @@ const handleDataFromDevice = async (req, res) => {
         const now = Date.now();
         const lastRequestTime = deviceLastRequest.get(connectionID);
         if (lastRequestTime && now - lastRequestTime < 30000) {
-            return res.status(200).json({ message: "Too many requests. Please wait 30 seconds." });
+            return res.status(429).json({ error: "Too many requests. Please wait 30 seconds." });
         }
         deviceLastRequest.set(connectionID, now);
 
