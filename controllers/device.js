@@ -24,23 +24,26 @@ const handleDataFromDevice = async (req, res) => {
         if (status === 'LOW') {
             emitToFrontend(req, { connectionID }, "status");
             return res.status(200).json({ message: "Low status received and emitted" });
+        } else if (status === 'active') {
+            return res.status(200).json({ message: "Active status received successfully" });
+        } else {
+            const deviceData = await getDeviceData(connectionID);
+            if (!deviceData) {
+                await insertNewDeviceQuery(connectionID, `Device ${connectionID}`);
+            }
+
+            const now = Date.now();
+            const lastRequestTime = deviceLastRequest.get(connectionID);
+            if (lastRequestTime && now - lastRequestTime < 30000) {
+                return res.status(429).json({ error: "Too many requests. Please wait 30 seconds." });
+            }
+            deviceLastRequest.set(connectionID, now);
+
+            await insertTelemetryQuery(connectionID);
+            emitToFrontend(req, { connectionID, timestamp }, "update");
+            return res.status(200).json({ message: "Data processed successfully" });
         }
 
-        const deviceData = await getDeviceData(connectionID);
-        if (!deviceData) {
-            await insertNewDeviceQuery(connectionID, `Device ${connectionID}`);
-        }
-
-        const now = Date.now();
-        const lastRequestTime = deviceLastRequest.get(connectionID);
-        if (lastRequestTime && now - lastRequestTime < 30000) {
-            return res.status(429).json({ error: "Too many requests. Please wait 30 seconds." });
-        }
-        deviceLastRequest.set(connectionID, now);
-
-        await insertTelemetryQuery(connectionID);
-        emitToFrontend(req, { connectionID, timestamp }, "update");
-        return res.status(200).json({ message: "Data processed successfully" });
     } catch (error) {
         console.error(`[${timestamp}] Error processing data for device ${connectionID}: ${error.message}`);
         return res.status(500).json({ error: "Failed to process data" });
