@@ -37,7 +37,7 @@ export function throttle(fn, delay) {
     };
 }
 
-export function getFormattedDate(date, options = { weekday: 'long', month: 'long', day: 'numeric' }) {
+export function getFormattedDate(date, options = { month: 'long', day: 'numeric' }) {
     return date.toLocaleDateString(undefined, options);
 }
 

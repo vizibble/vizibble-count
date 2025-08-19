@@ -25,7 +25,7 @@
 
 <body class="bg-gray-200 text-gray-800">
     <%- include('includes/navbar.ejs') %>
-        <main class="p-10">
+        <main class="p-4 sm:p-10">
 
             <div id="wrapper"></div>
 
@@ -33,7 +33,7 @@
             <section
                 class="hidden top-5 left-1/2 z-[9999] fixed opacity-0 transition-all -translate-x-1/2 translate-y-4 duration-300 modal">
                 <div
-                    class="flex items-center bg-white shadow-lg p-4 border-red-500 border-l-8 rounded-2xl w-[90vw] w-fit overflow-hidden">
+                    class="flex items-center bg-white shadow-lg p-4 border-red-500 border-l-8 rounded-2xl w-fit w-full sm:w-[90vw] overflow-hidden">
                     <div class="flex justify-center items-center bg-red-100 rounded-full size-14">
                         <svg class="size-7 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
@@ -82,6 +82,7 @@
                 'border-bottom': '3px solid #1d4ed8',
                 'text-align': 'center',
                 'padding': '8px',
+                'min-width': '250px'
             },
             td: {
                 'text-align': 'center',

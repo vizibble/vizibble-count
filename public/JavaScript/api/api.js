@@ -1,4 +1,4 @@
-import { renderBarChart, renderLineChart } from '../charts/charts.js';
+import { renderBarChart, renderYesterdayChart } from '../charts/charts.js';
 import { getCurrentShiftIST, showModal, updateStatus } from '../utils/utils.js';
 
 export let active_connection = "";
@@ -75,7 +75,7 @@ document.getElementById("select").addEventListener("click", async () => {
         document.getElementById("widgets").classList.remove("hidden");
 
         renderBarChart(data);
-        renderLineChart(data);
+        renderYesterdayChart(data);
     } catch (err) {
         console.error("Error fetching widget data:", err.message);
         showModal("Fetch Error", err.message || "Something went wrong.");
