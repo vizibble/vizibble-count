@@ -1,50 +1,37 @@
-const pool = require("../service/db");
+const sql = require("../service/db");
 
 async function getDeviceData(connectionID) {
     try {
-        const { rows } = await pool.query(`
-        SELECT
-            id
-        FROM
-            devices d
-        WHERE
-            d.connection_id = $1
-        `,
-            [connectionID]
-        );
-        return rows.length > 0 ? true: false;
+        const rows = await sql`
+            SELECT id
+            FROM devices d
+            WHERE d.connection_id = ${connectionID}
+        `;
+        return rows.length > 0;
     } catch (error) {
-        throw new Error(error)
+        throw new Error(error);
     }
 }
 
-/**
- * Insert a new device into devices table.
- */
 async function insertNewDeviceQuery(connectionID) {
     try {
-        await pool.query(
-            `INSERT INTO devices (connection_id)
-            VALUES ($1)`,
-            [connectionID]
-        );
+        await sql`
+            INSERT INTO devices (connection_id)
+            VALUES (${connectionID})
+        `;
     } catch (error) {
-        throw new Error(error)
+        throw new Error(error);
     }
 }
 
-/**
- * Insert a telemetry record for the given device using its connection ID.
- */
 async function insertTelemetryQuery(connectionID) {
     try {
-        await pool.query(
-            `INSERT INTO telemetry (device_id)
-            SELECT id FROM devices WHERE connection_id = $1`,
-            [connectionID]
-        );
+        await sql`
+            INSERT INTO telemetry (device_id)
+            SELECT id FROM devices WHERE connection_id = ${connectionID}
+        `;
     } catch (error) {
-        throw new Error(error)
+        throw new Error(error);
     }
 }
 
