@@ -60,7 +60,7 @@
         search: true,
         columns: ["Date", "Name", "Total Production"],
         server: {
-            url: '/records/data',
+            url: '/user/records/data',
             then: data => data.map(entry => [
                 new Date(entry.date).toLocaleString("en-IN", {
                     timeZone: "Asia/Kolkata",

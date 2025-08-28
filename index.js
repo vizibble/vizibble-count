@@ -14,6 +14,8 @@ require("dotenv").config();
 //Express Middlewares for recieving and parsing json and form data
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
 
 // Setting Up Templating Engine
 const path = require("path")
@@ -34,15 +36,14 @@ io.on("connection", (socket) => { app.set("socket", socket) })
 //Different Routes
 const device = require("./routes/device.js")
 app.use("/api", device)
-const user = require("./routes/user.js")
 
-app.use("/", (req, res, next) => {
-    if (process.env.NODE_ENV === 'production') {
-        const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'dist/.vite/manifest.json'), 'utf8'));
-        res.locals.manifest = manifest;
-    }
-    user(req, res, next);
-});
+const user = require("./routes/user.js")
+const { manifestMiddleware } = require('./middleware/manifest.js');
+const { JWTMiddleware } = require('./middleware/checkAuth.js');
+app.use("/user", manifestMiddleware, JWTMiddleware, user);
+
+const auth = require("./routes/auth.js");
+app.use("/", auth)
 
 //Starting the server
 const PORT = process.env.PORT || 8080

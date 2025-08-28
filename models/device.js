@@ -1,6 +1,6 @@
 const sql = require("../service/db");
 
-async function getDeviceData(connectionID) {
+async function Get_Device_Info_Query(connectionID) {
     try {
         const rows = await sql`
             SELECT id
@@ -13,7 +13,7 @@ async function getDeviceData(connectionID) {
     }
 }
 
-async function insertNewDeviceQuery(connectionID) {
+async function Insert_New_Device_Query(connectionID) {
     try {
         await sql`
             INSERT INTO devices (connection_id)
@@ -24,7 +24,7 @@ async function insertNewDeviceQuery(connectionID) {
     }
 }
 
-async function insertTelemetryQuery(connectionID) {
+async function Insert_Telemetry_Query(connectionID) {
     try {
         await sql`
             INSERT INTO telemetry (device_id)
@@ -36,7 +36,7 @@ async function insertTelemetryQuery(connectionID) {
 }
 
 module.exports = {
-    getDeviceData,
-    insertNewDeviceQuery,
-    insertTelemetryQuery,
+    Get_Device_Info_Query,
+    Insert_New_Device_Query,
+    Insert_Telemetry_Query,
 };

@@ -1,13 +1,13 @@
 const sql = require("../service/db");
-const { getISTDates, sumCounts } = require("./utils");
+const { getISTDates, sumCounts } = require("../database/utils");
 
-const Get_Historical_Data = async (ID) => {
+const Get_Device_Data_Query = async (deviceID) => {
     const { current, previous } = getISTDates();
 
     const [currentHits, previousHits, meta] = await Promise.all([
-        GetTelemetryHits(ID, current),
-        GetTelemetryHits(ID, previous),
-        GetDeviceMeta(ID)
+        GetTelemetryHits(deviceID, current),
+        GetTelemetryHits(deviceID, previous),
+        GetDeviceMeta(deviceID)
     ]);
 
     const todayTotal = sumCounts(currentHits);
@@ -41,7 +41,7 @@ const Get_Historical_Data = async (ID) => {
     };
 };
 
-const GetTelemetryHits = async (ID, startIST) => {
+const GetTelemetryHits = async (deviceID, startIST) => {
     try {
         const rows = await sql`
             WITH hours AS (
@@ -58,7 +58,7 @@ const GetTelemetryHits = async (ID, startIST) => {
                 FROM
                     telemetry
                 WHERE
-                    device_id = ${ID}
+                    device_id = ${deviceID}
                     AND (timestamp AT TIME ZONE 'Asia/Kolkata') >= ${startIST}::timestamp
                     AND (timestamp AT TIME ZONE 'Asia/Kolkata') < (${startIST}::timestamp + interval '1 day')
                 GROUP BY
@@ -100,15 +100,26 @@ const GetDeviceMeta = async (ID) => {
     }
 };
 
-const Get_All_Ids_Query = async () => {
+const Get_All_Ids_Query = async (userId) => {
     try {
-        return await sql`SELECT connection_id, id FROM devices`;
+        const rows = await sql`
+                        SELECT 
+                            connection_id, 
+                            id 
+                        FROM 
+                            devices
+                        WHERE
+                            user_id = ${userId}
+                        `;
+
+        return rows
     } catch (error) {
         throw new Error(error);
     }
 };
 
-const Get_Records_Data = async () => {
+
+const Get_Records_Data_Query = async (userID) => {
     try {
         const rows = await sql`
             SELECT
@@ -119,7 +130,12 @@ const Get_Records_Data = async () => {
             FROM
                 daily_pieces dp
             JOIN
-                device_details dd ON dd.device_id = dp.device_id;
+                device_details dd ON dd.device_id = dp.device_id
+            JOIN
+                devices d ON d.id = dp.device_id
+            WHERE
+                d.user_id = ${userID}
+            ORDER BY dp.date DESC;
         `;
         return rows;
     } catch (error) {
@@ -127,4 +143,4 @@ const Get_Records_Data = async () => {
     }
 };
 
-module.exports = { Get_Historical_Data, Get_All_Ids_Query, Get_Records_Data };
+module.exports = { Get_Device_Data_Query, Get_All_Ids_Query, Get_Records_Data_Query };

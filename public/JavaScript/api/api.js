@@ -21,7 +21,7 @@ document.getElementById("select").addEventListener("click", async () => {
     document.getElementById("loading").classList.remove("hidden");
 
     try {
-        const res = await fetch(`/widgets/data?device=${ID}`);
+        const res = await fetch(`/user/widgets/data?device=${ID}`);
         const response = await res.json();
 
         if (!res.ok || !response || !Array.isArray(response.data)) {

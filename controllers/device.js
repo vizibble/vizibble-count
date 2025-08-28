@@ -1,4 +1,4 @@
-const { getDeviceData, insertNewDeviceQuery, insertTelemetryQuery } = require("../Database/device");
+const { Get_Device_Info_Query, Insert_New_Device_Query, Insert_Telemetry_Query } = require("../models/device");
 
 const deviceLastRequest = new Map();
 
@@ -27,19 +27,19 @@ const handleDataFromDevice = async (req, res) => {
         } else if (status === 'alive') {
             return res.status(200).json({ message: "Alive status received successfully" });
         } else {
-            const deviceData = await getDeviceData(connectionID);
+            const deviceData = await Get_Device_Info_Query(connectionID);
             if (!deviceData) {
-                await insertNewDeviceQuery(connectionID, `Device ${connectionID}`);
+                await Insert_New_Device_Query(connectionID, `Device ${connectionID}`);
             }
 
             const now = Date.now();
             const lastRequestTime = deviceLastRequest.get(connectionID);
-            if (lastRequestTime && now - lastRequestTime < 30000) {
+            if (lastRequestTime && now - lastRequestTime < 5000) {
                 return res.status(429).json({ error: "Too many requests. Please wait 30 seconds." });
             }
             deviceLastRequest.set(connectionID, now);
 
-            await insertTelemetryQuery(connectionID);
+            await Insert_Telemetry_Query(connectionID);
             emitToFrontend(req, { connectionID, timestamp }, "update");
             return res.status(200).json({ message: "Data processed successfully" });
         }

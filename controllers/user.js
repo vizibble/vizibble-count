@@ -1,9 +1,10 @@
-const { Get_Historical_Data, Get_All_Ids_Query, Get_Records_Data } = require("../Database/user.js");
+const { Get_Device_Data_Query, Get_All_Ids_Query, Get_Records_Data_Query } = require("../models/user.js");
 require("dotenv").config()
 
 const displayHome = async (req, res) => {
+    const userID = req.user
     try {
-        const devices = await Get_All_Ids_Query();
+        const devices = await Get_All_Ids_Query(userID);
         return res.status(200).render("index.ejs", { names: devices });
     }
     catch (error) {
@@ -14,8 +15,9 @@ const displayHome = async (req, res) => {
 
 const GetWidgetData = async (req, res) => {
     const { device } = req.query;
+    const userID = req.user;
     try {
-        const rows = await Get_Historical_Data(device);
+        const rows = await Get_Device_Data_Query(device);
         return res.status(200).json(rows);
     } catch (error) {
         console.error(`[${new Date().toLocaleString("en-GB")}] Error retrieving data for device ${device}: ${error.message}`);
@@ -24,8 +26,9 @@ const GetWidgetData = async (req, res) => {
 }
 
 const getRecords = async (req, res) => {
+    const userID = req.user;
     try {
-        const data = await Get_Records_Data();
+        const data = await Get_Records_Data_Query(userID);
         return res.status(200).json(data);
     } catch (error) {
         console.error(`[${new Date().toLocaleString("en-GB")}] Error retrieving records for device ${device}: ${error.message}`);
