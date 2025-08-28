@@ -5,6 +5,7 @@ const formatIST6AM = (dateObj) => {
     return `${y}-${m}-${d} 06:00:00`;
 };
 
+
 const sumCounts = (hits) =>
     hits.reduce((sum, row) => sum + Number(row.count), 0);
 
