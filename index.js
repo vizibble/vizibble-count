@@ -38,14 +38,14 @@ const device = require("./routes/device.js")
 app.use("/api", device)
 
 const user = require("./routes/user.js")
-// const { manifestMiddleware } = require('./middleware/manifest.js');
+
 const { JWTMiddleware } = require('./middleware/checkAuth.js');
 app.use("/user", (req, res, next) => {
     if (process.env.NODE_ENV === 'production') {
         const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'dist/.vite/manifest.json'), 'utf8'));
         res.locals.manifest = manifest;
     }
-    user(req, res, next);
+    next();
 }, JWTMiddleware, user);
 
 const auth = require("./routes/auth.js");
