@@ -1,5 +1,5 @@
 const sql = require("../service/db");
-const { getISTDates, sumCounts } = require("../database/utils");
+const { getISTDates, sumCounts } = require("../Database/utils");
 
 const Get_Device_Data_Query = async (deviceID) => {
     const { current, previous } = getISTDates();
