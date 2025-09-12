@@ -24,7 +24,7 @@ const handleDataFromDevice = async (req, res) => {
         if (status === 'LOW') {
             emitToFrontend(req, { connectionID }, "status");
             return res.status(200).json({ message: "Low status received and emitted" });
-        } else if (status === 'alive') {
+        } else if (status === 'ALIVE' || status === 'alive') {
             return res.status(200).json({ message: "Alive status received successfully" });
         } else {
             const deviceData = await Get_Device_Info_Query(connectionID);
