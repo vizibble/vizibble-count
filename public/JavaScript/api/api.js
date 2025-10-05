@@ -67,7 +67,10 @@ document.getElementById("select").addEventListener("click", async () => {
                 ((currentHour >= 22 || currentHour < 6) && (hourIST >= 22 || hourIST < 6))
             );
         });
-        const shiftCount = Number(shiftData.reduce((sum, e) => sum + Number(e.todayCount), 0));
+        const shiftCount = shiftData.reduce((sum, entry) => {
+            const hourlySum = entry.todayCount.reduce((hourSum, product) => hourSum + product.count, 0);
+            return sum + hourlySum;
+        }, 0);
         $('#shiftHitCount').sevenSeg({ value: shiftCount, digits: String(shiftCount).length, decimalPoint: false });
         shift_count = shiftCount;
 

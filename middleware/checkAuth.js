@@ -1,5 +1,5 @@
 require('dotenv').config();
-const jwt = require("jsonwebtoken");
+const { JWTVerification } = require('../service/userAutehntication.js');
 
 
 const JWTMiddleware = (req, res, next) => {
@@ -8,14 +8,11 @@ const JWTMiddleware = (req, res, next) => {
         console.error(`[${new Date().toLocaleString("en-GB")}] Unauthorised Access`);
         return res.status(401).redirect(`/`);
     }
-    try {
-        const JWTSecretKey = process.env.JWTSecretKey;
-        const decodedPayload = jwt.verify(token, JWTSecretKey);
-        req.user = decodedPayload;
-        next();
-    } catch (err) {
-        console.error(`[${new Date().toLocaleString("en-GB")}] Error validating user for admin access: ${err.message}`);
+    const decoded = JWTVerification(token);
+    if (!decoded) {
         return res.redirect(`/`);
     }
+    req.user = decoded.id;
+    next();
 }
 module.exports = { JWTMiddleware }

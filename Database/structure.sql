@@ -20,15 +20,22 @@ CREATE TABLE device_details (
     product VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE telemetry (
-    device_id BIGINT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
-    timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE daily_pieces (
+CREATE TABLE device_products (
     id BIGSERIAL PRIMARY KEY,
     device_id BIGINT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
-    date DATE NOT NULL,
-    total_pieces INT DEFAULT 0,
-    UNIQUE(device_id, date)
+    name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE telemetry (
+    product_id BIGINT NOT NULL REFERENCES device_products(id) ON DELETE CASCADE,
+    device_id BIGINT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+    timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (product_id, timestamp)
+);
+
+CREATE TABLE daily_production_counts (
+    production_date DATE NOT NULL,
+    product_id BIGINT NOT NULL REFERENCES device_products(id) ON DELETE CASCADE,
+    piece_count INTEGER NOT NULL,
+    PRIMARY KEY (date, product_id)
 );

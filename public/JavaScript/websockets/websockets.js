@@ -1,4 +1,6 @@
-import { active_connection, shift_count, updateShiftCount } from '../api/api.js';
+import {
+  active_connection, shift_count, updateShiftCount,
+} from '../api/api.js';
 import { updateStatus } from '../utils/utils.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -33,11 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateStatus('HIGH')
         // Update chart
+        // Update chart
         const hitsChart = echarts.getInstanceByDom(document.getElementById('hitsChart'));
         if (hitsChart) {
             const options = hitsChart.getOption();
             const rawDate = new Date(data.timestamp);
             const istDate = new Date(rawDate.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+            const productName = data.product;
 
             let hours = istDate.getHours();
             const suffix = hours >= 12 ? 'pm' : 'am';
@@ -46,13 +50,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const hourLabel = `${String(hours).padStart(2, '0')}:00 ${suffix}`;
 
             const labelIndex = options.xAxis[0].data.indexOf(hourLabel);
+            let seriesIndex = options.series.findIndex(s => s.name === productName);
+
+            // ✅ If device/product not in chart, add a new series
+            if (seriesIndex === -1) {
+                options.series.push({
+                    name: productName,
+                    type: 'bar',   // or 'line' depending on your chart type
+                    data: Array(options.xAxis[0].data.length).fill(0)
+                });
+                seriesIndex = options.series.length - 1;
+            }
+
+            // Now update data
             if (labelIndex > -1) {
-                const currentCount = parseInt(options.series[0].data[labelIndex])
-                options.series[0].data[labelIndex] = currentCount + 1;
+                options.series[seriesIndex].data[labelIndex] =
+                    (options.series[seriesIndex].data[labelIndex] || 0) + 1;
             } else {
                 options.xAxis[0].data.push(hourLabel);
-                options.series[0].data.push(data.deviceCount);
+                options.series.forEach((s, i) => {
+                    if (i === seriesIndex) {
+                        s.data.push(1);
+                    } else {
+                        s.data.push(0);
+                    }
+                });
             }
+
             hitsChart.setOption(options);
         }
 

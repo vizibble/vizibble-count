@@ -31,7 +31,7 @@ const getRecords = async (req, res) => {
         const data = await Get_Records_Data_Query(userID);
         return res.status(200).json(data);
     } catch (error) {
-        console.error(`[${new Date().toLocaleString("en-GB")}] Error retrieving records for device ${device}: ${error.message}`);
+        console.error(`[${new Date().toLocaleString("en-GB")}] Error retrieving records for user ${userID}: ${error.message}`);
         return res.status(500).json({ error: error.message });
     }
 }

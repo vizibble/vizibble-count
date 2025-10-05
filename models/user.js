@@ -13,13 +13,42 @@ const Get_Device_Data_Query = async (deviceID) => {
     const todayTotal = sumCounts(currentHits);
     const yesterdayTotal = sumCounts(previousHits);
 
-    const data = currentHits.map((entry, index) => {
+    const todayMap = {};
+    currentHits.forEach(hit => {
+        const hour = new Date(hit.hour).getHours();
+        if (!todayMap[hour]) todayMap[hour] = [];
+        if (hit.count > 0) {
+            todayMap[hour].push({
+                product_id: hit.product_id,
+                product_name: hit.product_name,
+                count: Number(hit.count)
+            });
+        }
+    });
+
+    const yesterdayMap = {};
+    previousHits.forEach(hit => {
+        const hour = new Date(hit.hour).getHours();
+        if (!yesterdayMap[hour]) yesterdayMap[hour] = [];
+        if (hit.count > 0) {
+            yesterdayMap[hour].push({
+                product_id: hit.product_id,
+                product_name: hit.product_name,
+                count: Number(hit.count)
+            });
+        }
+    });
+
+    const uniqueHourStrings = [...new Set(currentHits.map(h => h.hour))].sort();
+
+    const data = uniqueHourStrings.map(hourString => {
+        const hour = new Date(hourString).getHours();
         return {
-            hour: entry.hour,
-            todayCount: Number(entry.count),
-            yesterdayCount: Number(previousHits[index].count)
-        };
-    })
+            hour: hourString,
+            todayCount: todayMap[hour] || [],
+            yesterdayCount: yesterdayMap[hour] || []
+        }
+    });
 
     const percentageDiff =
         yesterdayTotal > 0
@@ -34,9 +63,9 @@ const Get_Device_Data_Query = async (deviceID) => {
             percentage: Number(percentageDiff.toFixed(2))
         },
         meta: {
-            product: meta.product,
             operator: meta.operator,
-            machine_name: meta.machine_name
+            machine_name: meta.machine_name,
+            product: meta.product
         }
     };
 };
@@ -51,9 +80,18 @@ const GetTelemetryHits = async (deviceID, startIST) => {
                     interval '1 hour'
                 ) AS hour
             ),
+            products AS (
+                SELECT id, name FROM device_products WHERE device_id = ${deviceID}
+            ),
+            hours_products AS (
+                SELECT h.hour, p.id as product_id, p.name as product_name
+                FROM hours h
+                CROSS JOIN products p
+            ),
             hits AS (
                 SELECT
                     date_trunc('hour', timestamp AT TIME ZONE 'Asia/Kolkata') AS hour,
+                    product_id,
                     COUNT(*) AS count
                 FROM
                     telemetry
@@ -62,16 +100,18 @@ const GetTelemetryHits = async (deviceID, startIST) => {
                     AND (timestamp AT TIME ZONE 'Asia/Kolkata') >= ${startIST}::timestamp
                     AND (timestamp AT TIME ZONE 'Asia/Kolkata') < (${startIST}::timestamp + interval '1 day')
                 GROUP BY
-                    1
+                    1, 2
             )
             SELECT
-                to_char(h.hour, 'YYYY-MM-DD HH24:00:00') AS hour,
+                to_char(hp.hour, 'YYYY-MM-DD HH24:00:00') AS hour,
+                hp.product_id,
+                hp.product_name,
                 COALESCE(t.count, 0) AS count
             FROM
-                hours h
-                LEFT JOIN hits t ON h.hour = t.hour
+                hours_products hp
+                LEFT JOIN hits t ON hp.hour = t.hour AND hp.product_id = t.product_id
             ORDER BY
-                h.hour;
+                hp.product_id, hp.hour;
         `;
         return rows;
     } catch (error) {
@@ -123,19 +163,20 @@ const Get_Records_Data_Query = async (userID) => {
     try {
         const rows = await sql`
             SELECT
-                dd.name AS name,
-                dp.id AS id,
-                dp.date AS date,
-                dp.total_pieces AS count
+                dpc.production_date AS date,
+                dp.name AS name,
+                dpc.piece_count AS count
             FROM
-                daily_pieces dp
+                daily_production_counts AS dpc
             JOIN
-                device_details dd ON dd.device_id = dp.device_id
+                device_products AS dp ON dpc.product_id = dp.id
             JOIN
-                devices d ON d.id = dp.device_id
+                devices AS d ON dp.device_id = d.id
             WHERE
                 d.user_id = ${userID}
-            ORDER BY dp.date DESC;
+            ORDER BY
+                dpc.production_date DESC,
+                dp.name ASC;
         `;
         return rows;
     } catch (error) {

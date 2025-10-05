@@ -55,22 +55,37 @@
 <script>
     new gridjs.Grid({
         pagination: {
-            limit: 20
+            limit: 30
         },
         search: true,
-        columns: ["Date", "Name", "Total Production"],
+        columns: ["Date", "Product Name", "Production Count"],
         server: {
             url: '/user/records/data',
-            then: data => data.map(entry => [
-                new Date(entry.date).toLocaleString("en-IN", {
-                    timeZone: "Asia/Kolkata",
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                }),
-                entry.name,
-                entry.count
-            ])
+            then: data => {
+                // Sort data by date (newest first) and then by product name
+                data.sort((a, b) => {
+                    const dateComparison = new Date(b.date) - new Date(a.date);
+                    if (dateComparison !== 0) {
+                        return dateComparison;
+                    }
+                    return a.name.localeCompare(b.name);
+                });
+
+                let lastDate = null;
+                return data.map(entry => {
+                    const currentDate = new Date(entry.date).toLocaleString("en-IN", {
+                        timeZone: "Asia/Kolkata",
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                    });
+
+                    const dateDisplay = currentDate === lastDate ? '' : currentDate;
+                    lastDate = currentDate;
+                    
+                    return [dateDisplay, entry.name, entry.count];
+                });
+            }
         },
         style: {
             table: {

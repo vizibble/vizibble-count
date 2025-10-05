@@ -1,4 +1,4 @@
-name: Update Daily Pieces (IST 6AM)
+name: Update Daily Production Count
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  update-daily-pieces:
+  update-daily-production-counts:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,18 +15,20 @@ jobs:
 
       - name: Run INSERT aggregation via psql
         run: |
-          echo "Running aggregation query..."
+          echo "Running daily production count aggregation..."
           psql "$DATABASE_URL" -c "
-            INSERT INTO daily_pieces (device_id, date, total_pieces)
+            INSERT INTO daily_production_counts (production_date, product_id, piece_count)
             SELECT
-              device_id,
-              DATE((timestamp AT TIME ZONE 'Asia/Kolkata') - INTERVAL '6 hours') AS ist_date,
-              COUNT(*) AS total
+                ((date_trunc('day', now() AT TIME ZONE 'Asia/Kolkata') - INTERVAL '1 day' + INTERVAL '6 hour'))::date AS production_date,
+                product_id,
+                COUNT(*) AS piece_count
             FROM telemetry
-            WHERE timestamp >= NOW() - INTERVAL '1 day'
-            GROUP BY device_id, ist_date
-            ON CONFLICT (device_id, date) DO UPDATE
-            SET total_pieces = EXCLUDED.total_pieces;
+            WHERE
+                timestamp >= ((date_trunc('day', now() AT TIME ZONE 'Asia/Kolkata') - INTERVAL '1 day' + INTERVAL '30 min') AT TIME ZONE 'UTC')
+                AND timestamp < ((date_trunc('day', now() AT TIME ZONE 'Asia/Kolkata') + INTERVAL '30 min') AT TIME ZONE 'UTC')
+            GROUP BY production_date, product_id
+            ON CONFLICT (production_date, product_id) DO UPDATE
+            SET piece_count = EXCLUDED.piece_count;
           "
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

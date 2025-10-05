@@ -1,20 +1,26 @@
 
 const bcrypt = require('bcrypt');
 const { Get_User_By_Email_Query } = require('../models/auth');
-const { JWTGeneration } = require('../service/userAutehntication');
+const { JWTGeneration, JWTVerification } = require('../service/userAutehntication.js');
 require('dotenv').config();
-
 
 const displayLogin = async (req, res) => {
     try {
-        const token = req.cookies.token
+        const token = req.cookies.token;
+        if (!token)
+            return res.status(200).render("login.ejs");
 
-        if (token) {
+        const decoded = JWTVerification(token);
+        if (decoded) {
             return res.status(200).redirect("/user");
+        } else {
+            res.clearCookie("token");
+            return res.status(200).render("login.ejs");
         }
-        return res.status(200).render("login.ejs");
+
     } catch (err) {
-        return res.status(200).render("login.ejs");
+        console.error(`[${new Date().toLocaleString('en-GB')}] Error displaying login:`, err.message);
+        return res.status(500).render("login.ejs");
     }
 };
 
@@ -29,12 +35,13 @@ const validateLogin = async (req, res) => {
         if (!isPasswordValid) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
-        const token = JWTGeneration(user.id);
+        const token = JWTGeneration({ id: user.id });
         res.cookie("token", token, {
             httpOnly: true,
-            sameSite: 'None',
+            sameSite: "None",
             secure: true,
-        })
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+        });
         return res.status(200).redirect('/user')
     } catch (error) {
         console.error(`[${new Date().toLocaleString('en-GB')}] Error logging in user: ${error.message}`);
