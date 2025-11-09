@@ -37,5 +37,5 @@ CREATE TABLE daily_production_counts (
     production_date DATE NOT NULL,
     product_id BIGINT NOT NULL REFERENCES device_products(id) ON DELETE CASCADE,
     piece_count INTEGER NOT NULL,
-    PRIMARY KEY (date, product_id)
+    PRIMARY KEY (production_date, product_id)
 );

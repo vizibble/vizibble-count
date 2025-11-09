@@ -1,10 +1,11 @@
-const sql = require("../service/db");
+const { query } = require("../service/db");
 
 async function Get_Device_Info_Query(connectionID) {
     try {
-        const rows = await sql`
-            SELECT id FROM devices WHERE connection_id = ${connectionID}
+        const queryText = `
+            SELECT id FROM devices WHERE connection_id = $1
         `;
+        const { rows } = await query(queryText, [connectionID]);
         return rows.length > 0 ? rows[0] : null;
     } catch (error) {
         throw new Error(error);
@@ -13,17 +14,14 @@ async function Get_Device_Info_Query(connectionID) {
 
 async function Insert_Telemetry_Query(deviceID, productName) {
     try {
-        const rows = await sql`
-            SELECT id FROM device_products WHERE device_id = ${deviceID} AND name = ${productName}
-        `;
-
-        await sql`
+        const queryText = `
             INSERT INTO telemetry (device_id, product_id)
             VALUES (
-                ${deviceID},
-                (SELECT id FROM device_products WHERE device_id = ${deviceID} AND name = ${productName})
+                $1,
+                (SELECT id FROM device_products WHERE device_id = $2 AND name = $3)
             )
         `;
+        await query(queryText, [deviceID, deviceID, productName]);
     } catch (error) {
         throw new Error(error);
     }

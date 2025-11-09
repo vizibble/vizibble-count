@@ -1,4 +1,4 @@
-const sql = require("../service/db");
+const { query } = require("../service/db");
 const { getISTDates, sumCounts } = require("../Database/utils");
 
 const Get_Device_Data_Query = async (deviceID) => {
@@ -72,16 +72,16 @@ const Get_Device_Data_Query = async (deviceID) => {
 
 const GetTelemetryHits = async (deviceID, startIST) => {
     try {
-        const rows = await sql`
+        const queryText = `
             WITH hours AS (
                 SELECT generate_series(
-                    ${startIST}::timestamp,
-                    ${startIST}::timestamp + interval '23 hours',
+                    $1::timestamp,
+                    $1::timestamp + interval '23 hours',
                     interval '1 hour'
                 ) AS hour
             ),
             products AS (
-                SELECT id, name FROM device_products WHERE device_id = ${deviceID}
+                SELECT id, name FROM device_products WHERE device_id = $2
             ),
             hours_products AS (
                 SELECT h.hour, p.id as product_id, p.name as product_name
@@ -96,9 +96,9 @@ const GetTelemetryHits = async (deviceID, startIST) => {
                 FROM
                     telemetry
                 WHERE
-                    device_id = ${deviceID}
-                    AND (timestamp AT TIME ZONE 'Asia/Kolkata') >= ${startIST}::timestamp
-                    AND (timestamp AT TIME ZONE 'Asia/Kolkata') < (${startIST}::timestamp + interval '1 day')
+                    device_id = $2
+                    AND (timestamp AT TIME ZONE 'Asia/Kolkata') >= $1::timestamp
+                    AND (timestamp AT TIME ZONE 'Asia/Kolkata') < ($1::timestamp + interval '1 day')
                 GROUP BY
                     1, 2
             )
@@ -113,6 +113,7 @@ const GetTelemetryHits = async (deviceID, startIST) => {
             ORDER BY
                 hp.product_id, hp.hour;
         `;
+        const { rows } = await query(queryText, [startIST, deviceID]);
         return rows;
     } catch (error) {
         throw new Error(error);
@@ -121,7 +122,7 @@ const GetTelemetryHits = async (deviceID, startIST) => {
 
 const GetDeviceMeta = async (ID) => {
     try {
-        const rows = await sql`
+        const queryText = `
             SELECT
                 dd.product,
                 dd.operator,
@@ -131,9 +132,10 @@ const GetDeviceMeta = async (ID) => {
             JOIN
                 devices d ON d.id = dd.device_id
             WHERE
-                d.id = ${ID}
+                d.id = $1
             LIMIT 1;
         `;
+        const { rows } = await query(queryText, [ID]);
         return rows[0] || {};
     } catch (error) {
         throw new Error(error);
@@ -142,16 +144,16 @@ const GetDeviceMeta = async (ID) => {
 
 const Get_All_Ids_Query = async (userId) => {
     try {
-        const rows = await sql`
+        const queryText = `
                         SELECT 
                             connection_id, 
                             id 
                         FROM 
                             devices
                         WHERE
-                            user_id = ${userId}
+                            user_id = $1
                         `;
-
+        const { rows } = await query(queryText, [userId]);
         return rows
     } catch (error) {
         throw new Error(error);
@@ -161,7 +163,7 @@ const Get_All_Ids_Query = async (userId) => {
 
 const Get_Records_Data_Query = async (userID) => {
     try {
-        const rows = await sql`
+        const queryText = `
             SELECT
                 dpc.production_date AS date,
                 dp.name AS name,
@@ -173,11 +175,12 @@ const Get_Records_Data_Query = async (userID) => {
             JOIN
                 devices AS d ON dp.device_id = d.id
             WHERE
-                d.user_id = ${userID}
+                d.user_id = $1
             ORDER BY
                 dpc.production_date DESC,
                 dp.name ASC;
         `;
+        const { rows } = await query(queryText, [userID]);
         return rows;
     } catch (error) {
         throw new Error(error);
