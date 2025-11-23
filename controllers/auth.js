@@ -2,6 +2,7 @@
 const bcrypt = require('bcrypt');
 const { Get_User_By_Email_Query } = require('../models/auth');
 const { JWTGeneration, JWTVerification } = require('../service/userAutehntication.js');
+const { getTimestamp } = require('../utils/time.js');
 require('dotenv').config();
 
 const displayLogin = async (req, res) => {
@@ -19,7 +20,7 @@ const displayLogin = async (req, res) => {
         }
 
     } catch (err) {
-        console.error(`[${new Date().toLocaleString('en-GB')}] Error displaying login:`, err.message);
+        console.error(`[${getTimestamp()}] Error displaying login:`, err);
         return res.status(500).render("login.ejs");
     }
 };
@@ -44,7 +45,7 @@ const validateLogin = async (req, res) => {
         });
         return res.status(200).redirect('/user')
     } catch (error) {
-        console.error(`[${new Date().toLocaleString('en-GB')}] Error logging in user: ${error.message}`);
+        console.error(`[${getTimestamp()}] Error logging in user:`, error);
         res.status(500).json({ error: 'Internal server error while logging in user.' });
     }
 };

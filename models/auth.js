@@ -10,7 +10,7 @@ const Get_User_By_Email_Query = async (email) => {
         const { rows } = await query(queryText, [email]);
         return rows[0] || null;
     } catch (error) {
-        throw new Error(error);
+        throw error;
     }
 };
 

@@ -116,7 +116,7 @@ const GetTelemetryHits = async (deviceID, startIST) => {
         const { rows } = await query(queryText, [startIST, deviceID]);
         return rows;
     } catch (error) {
-        throw new Error(error);
+        throw error;
     }
 };
 
@@ -138,7 +138,7 @@ const GetDeviceMeta = async (ID) => {
         const { rows } = await query(queryText, [ID]);
         return rows[0] || {};
     } catch (error) {
-        throw new Error(error);
+        throw error;
     }
 };
 
@@ -156,7 +156,7 @@ const Get_All_Ids_Query = async (userId) => {
         const { rows } = await query(queryText, [userId]);
         return rows
     } catch (error) {
-        throw new Error(error);
+        throw error;
     }
 };
 
@@ -183,7 +183,7 @@ const Get_Records_Data_Query = async (userID) => {
         const { rows } = await query(queryText, [userID]);
         return rows;
     } catch (error) {
-        throw new Error(error);
+        throw error;
     }
 };
 

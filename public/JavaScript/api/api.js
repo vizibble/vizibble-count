@@ -16,6 +16,7 @@ document.getElementById("select").addEventListener("click", async () => {
         return;
     }
 
+
     const ID = selectedRadio.value;
     document.getElementById("select").classList.add("hidden");
     document.getElementById("loading").classList.remove("hidden");

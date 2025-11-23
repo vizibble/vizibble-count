@@ -29,9 +29,8 @@ if (process.env.NODE_ENV == 'production') {
 }
 
 //Socket.io
-const socket = require("socket.io")
-const io = new socket.Server(server)
-io.on("connection", (socket) => { app.set("socket", socket) })
+const { init: initSocket } = require("./service/socket.js");
+initSocket(server);
 
 //Different Routes
 const device = require("./routes/device.js")

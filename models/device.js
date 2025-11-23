@@ -8,7 +8,7 @@ async function Get_Device_Info_Query(connectionID) {
         const { rows } = await query(queryText, [connectionID]);
         return rows.length > 0 ? rows[0] : null;
     } catch (error) {
-        throw new Error(error);
+        throw error;
     }
 }
 
@@ -23,7 +23,7 @@ async function Insert_Telemetry_Query(deviceID, productName) {
         `;
         await query(queryText, [deviceID, deviceID, productName]);
     } catch (error) {
-        throw new Error(error);
+        throw error;
     }
 }
 
