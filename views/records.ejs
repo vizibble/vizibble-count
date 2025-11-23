@@ -20,6 +20,39 @@
         .mono-font {
             font-family: 'JetBrains Mono', monospace;
         }
+
+        /* Custom styling for date group rows */
+        .gridjs-tr.date-group-row {
+            background-color: #eff6ff;
+            border-top: 2px solid #2563eb;
+        }
+
+        .gridjs-tr.date-group-row td {
+            font-weight: 600;
+            padding: 12px 8px !important;
+        }
+
+        /* Subtle border for first product of date */
+        .gridjs-tr:has(a[href*="/user/records/chart"]) {
+            border-top: 2px solid #dbeafe;
+        }
+
+        /* Zebra striping for better readability */
+        .gridjs-tr:not(.date-group-row):nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        /* Hover effect */
+        .gridjs-tr:not(.date-group-row):hover {
+            background-color: #f3f4f6;
+        }
+
+        /* Mobile responsive adjustments */
+        @media (max-width: 640px) {
+            .gridjs-wrapper {
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 
@@ -53,57 +86,155 @@
 <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
 
 <script>
+    // Configuration constants
+    const CONFIG = {
+        ITEMS_PER_PAGE: 30,
+        TIMEZONE: "Asia/Kolkata",
+        LOCALE: "en-IN"
+    };
+
+    // Helper function to format date
+    function formatDate(dateString) {
+        return new Date(dateString).toLocaleString(CONFIG.LOCALE, {
+            timeZone: CONFIG.TIMEZONE,
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+    }
+
+    // Helper function to get YYYY-MM-DD format
+    function getDateForLink(dateString) {
+        return dateString.substring(0, 10);
+    }
+
+    // Sort data by date (newest first) then by product name
+    function sortData(data) {
+        return data.sort((a, b) => {
+            const dateComparison = new Date(b.date) - new Date(a.date);
+            return dateComparison !== 0 ? dateComparison : a.name.localeCompare(b.name);
+        });
+    }
+
+    // Transform data into table rows with grouped dates
+    function transformDataToRows(data) {
+        const sortedData = sortData(data);
+        const rows = [];
+        let lastDate = null;
+        let dailyTotal = 0;
+        let isFirstProductOfDate = false;
+
+        sortedData.forEach((entry, index) => {
+            const formattedDate = formatDate(entry.date);
+            const dateForLink = getDateForLink(entry.date);
+
+            // Check if we're starting a new date group
+            if (formattedDate !== lastDate) {
+                // Add summary row for previous date if exists
+                if (lastDate !== null) {
+                    rows.push({
+                        _type: 'summary',
+                        date: '',
+                        name: `Total for ${lastDate}`,
+                        count: dailyTotal
+                    });
+                }
+
+                lastDate = formattedDate;
+                dailyTotal = 0;
+                isFirstProductOfDate = true;
+            }
+
+            // Add product row (with date if first product)
+            rows.push({
+                _type: 'product',
+                date: isFirstProductOfDate ? formattedDate : '',
+                dateLink: isFirstProductOfDate ? dateForLink : '',
+                name: entry.name,
+                count: entry.count
+            });
+
+            dailyTotal += entry.count;
+            isFirstProductOfDate = false;
+
+            // Add summary for last date group
+            if (index === sortedData.length - 1) {
+                rows.push({
+                    _type: 'summary',
+                    date: '',
+                    name: `Total for ${lastDate}`,
+                    count: dailyTotal
+                });
+            }
+        });
+
+        return rows;
+    }
+
+    // Render table cells based on row type
+    function renderRow(row) {
+        if (row._type === 'summary') {
+            return [
+                '',
+                gridjs.html(`<span class="font-semibold text-gray-600">${row.name}</span>`),
+                gridjs.html(`<span class="font-bold text-blue-600">${row.count}</span>`)
+            ];
+        }
+
+        // Product row (with or without date)
+        const dateCell = row.date ? gridjs.html(`
+            <a href="/user/records/chart?date=${row.dateLink}" 
+            class="inline-flex items-center gap-2 font-semibold text-blue-600 hover:text-blue-800 hover:underline">
+                ${row.date}
+            </a>
+        `) : '';
+
+        return [
+            dateCell,
+            row.name,
+            row.count
+        ];
+    }
+
+    // Initialize Grid
     new gridjs.Grid({
         pagination: {
-            limit: 30
+            limit: CONFIG.ITEMS_PER_PAGE
         },
         search: true,
-        columns: ["Date", "Product Name", "Production Count"],
+        columns: [
+            { name: "Date", width: "25%" },
+            { name: "Product Name", width: "50%" },
+            { name: "Production Count", width: "25%" }
+        ],
         server: {
             url: '/user/records/data',
             then: data => {
-                // Sort data by date (newest first) and then by product name
-                data.sort((a, b) => {
-                    const dateComparison = new Date(b.date) - new Date(a.date);
-                    if (dateComparison !== 0) {
-                        return dateComparison;
-                    }
-                    return a.name.localeCompare(b.name);
-                });
-
-                let lastDate = null;
-                return data.map(entry => {
-                    const currentDate = new Date(entry.date).toLocaleString("en-IN", {
-                        timeZone: "Asia/Kolkata",
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                    });
-
-                    const dateDisplay = currentDate === lastDate ? '' : currentDate;
-                    lastDate = currentDate;
-                    
-                    return [dateDisplay, entry.name, entry.count];
-                });
+                const rows = transformDataToRows(data);
+                return rows.map(renderRow);
             }
         },
         style: {
             table: {
-                'border-radius': '30px'
+                'border-radius': '20px',
+                'overflow': 'hidden'
             },
             th: {
                 'background-color': '#2563eb',
-                color: '#fff',
+                'color': '#fff',
                 'border-bottom': '3px solid #1d4ed8',
                 'text-align': 'center',
-                'padding': '8px',
-                'min-width': '250px'
+                'padding': '12px 8px',
+                'font-weight': '600'
             },
             td: {
                 'text-align': 'center',
-                'padding': '8px',
-                'font-family': 'JetBrains Mono'
+                'padding': '10px 8px',
+                'font-family': "'JetBrains Mono', monospace"
             }
+        },
+        className: {
+            table: 'gridjs-table-custom'
         }
     }).render(document.getElementById("wrapper"));
 </script>

@@ -1,74 +1,4 @@
 const { query } = require("../service/db");
-const { getISTDates, sumCounts } = require("../Database/utils");
-
-const Get_Device_Data_Query = async (deviceID) => {
-    const { current, previous } = getISTDates();
-
-    const [currentHits, previousHits, meta] = await Promise.all([
-        GetTelemetryHits(deviceID, current),
-        GetTelemetryHits(deviceID, previous),
-        GetDeviceMeta(deviceID)
-    ]);
-
-    const todayTotal = sumCounts(currentHits);
-    const yesterdayTotal = sumCounts(previousHits);
-
-    const todayMap = {};
-    currentHits.forEach(hit => {
-        const hour = new Date(hit.hour).getHours();
-        if (!todayMap[hour]) todayMap[hour] = [];
-        if (hit.count > 0) {
-            todayMap[hour].push({
-                product_id: hit.product_id,
-                product_name: hit.product_name,
-                count: Number(hit.count)
-            });
-        }
-    });
-
-    const yesterdayMap = {};
-    previousHits.forEach(hit => {
-        const hour = new Date(hit.hour).getHours();
-        if (!yesterdayMap[hour]) yesterdayMap[hour] = [];
-        if (hit.count > 0) {
-            yesterdayMap[hour].push({
-                product_id: hit.product_id,
-                product_name: hit.product_name,
-                count: Number(hit.count)
-            });
-        }
-    });
-
-    const uniqueHourStrings = [...new Set(currentHits.map(h => h.hour))].sort();
-
-    const data = uniqueHourStrings.map(hourString => {
-        const hour = new Date(hourString).getHours();
-        return {
-            hour: hourString,
-            todayCount: todayMap[hour] || [],
-            yesterdayCount: yesterdayMap[hour] || []
-        }
-    });
-
-    const percentageDiff =
-        yesterdayTotal > 0
-            ? ((todayTotal - yesterdayTotal) / yesterdayTotal) * 100
-            : todayTotal > 0 ? 100 : 0;
-
-    return {
-        data,
-        comparison: {
-            today: todayTotal,
-            yesterday: yesterdayTotal,
-            percentage: Number(percentageDiff.toFixed(2))
-        },
-        meta: {
-            operator: meta.operator,
-            machine_name: meta.machine_name,
-            product: meta.product
-        }
-    };
-};
 
 const GetTelemetryHits = async (deviceID, startIST) => {
     try {
@@ -145,14 +75,14 @@ const GetDeviceMeta = async (ID) => {
 const Get_All_Ids_Query = async (userId) => {
     try {
         const queryText = `
-                        SELECT 
-                            connection_id, 
-                            id 
-                        FROM 
-                            devices
-                        WHERE
-                            user_id = $1
-                        `;
+            SELECT 
+                connection_id, 
+                id 
+            FROM 
+                devices
+            WHERE
+                user_id = $1
+        `;
         const { rows } = await query(queryText, [userId]);
         return rows
     } catch (error) {
@@ -187,4 +117,4 @@ const Get_Records_Data_Query = async (userID) => {
     }
 };
 
-module.exports = { Get_Device_Data_Query, Get_All_Ids_Query, Get_Records_Data_Query };
+module.exports = { GetTelemetryHits, GetDeviceMeta, Get_All_Ids_Query, Get_Records_Data_Query };
