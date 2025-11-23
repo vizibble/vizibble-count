@@ -27,7 +27,20 @@ async function Insert_Telemetry_Query(deviceID, productName) {
     }
 }
 
+async function Device_Permission_Query(userID, connectionID) {
+    try {
+        const queryText = `
+            SELECT id FROM devices WHERE user_id = $1 AND connection_id = $2
+        `;
+        const { rows } = await query(queryText, [userID, connectionID]);
+        return rows.length > 0;
+    } catch (error) {
+        throw error;
+    }
+}
+
 module.exports = {
     Get_Device_Info_Query,
-    Insert_Telemetry_Query
+    Insert_Telemetry_Query,
+    Device_Permission_Query
 };

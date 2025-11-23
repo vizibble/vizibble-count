@@ -29,15 +29,15 @@ if (process.env.NODE_ENV == 'production') {
 }
 
 //Socket.io
-const { init: initSocket } = require("./service/socket.js");
-initSocket(server);
+const { init } = require("./service/socket.js");
+init(server);
 
 //Different Routes
 const device = require("./routes/device.js")
-app.use("/api", device)
+const { deviceRateLimiter } = require('./middleware/rateLimiter.js');
+app.use("/api", deviceRateLimiter, device)
 
 const user = require("./routes/user.js")
-
 const { JWTMiddleware } = require('./middleware/checkAuth.js');
 app.use("/user", (req, res, next) => {
     if (process.env.NODE_ENV === 'production') {

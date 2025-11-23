@@ -6,7 +6,8 @@ router.route("/")
     .get(displayHome);
 
 router.route("/records")
-    .get((req, res) => { res.render("records.ejs") });
+    .get((_, res) => { res.render("records.ejs") });
+
 router.route("/records/data")
     .get(getRecords)
 

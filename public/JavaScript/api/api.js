@@ -10,12 +10,12 @@ export function updateShiftCount(newCount) {
 
 document.getElementById("select").addEventListener("click", async () => {
     const selectedRadio = document.querySelector('input[name="device"]:checked');
-    active_connection = selectedRadio.id;
     if (!selectedRadio) {
         showModal("No device selected!", "Please choose a device before fetching data.");
         return;
     }
-
+    active_connection = selectedRadio.id;
+    document.dispatchEvent(new CustomEvent('selectedDeviceChanged', { detail: { connectionID: active_connection } }));
 
     const ID = selectedRadio.value;
     document.getElementById("select").classList.add("hidden");

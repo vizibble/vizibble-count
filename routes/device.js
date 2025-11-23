@@ -5,6 +5,6 @@ const { handleDataFromDevice } = require("../controllers/device")
 const { deviceRateLimiter } = require("../middleware/rateLimiter")
 
 router.route("/:id")
-    .post(deviceRateLimiter, handleDataFromDevice)
+    .post(handleDataFromDevice)
 
 module.exports = router

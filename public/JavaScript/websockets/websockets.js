@@ -4,22 +4,31 @@ import {
 import { updateStatus } from '../utils/utils.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const socket = io();
+    const socket = io({
+        withCredentials: true
+    });
 
+    // Subscribe to updates when the page loads
     socket.on('connect', () => {
-        console.log('Connected to server via WebSocket.');
+        if (active_connection)
+            socket.emit('subscribe', active_connection);
+    });
+
+    // subscribe to the new device's room.
+    document.addEventListener('selectedDeviceChanged', (event) => {
+        const newConnectionID = event.detail.connectionID;
+        if (newConnectionID)
+            socket.emit('subscribe', newConnectionID);
     });
 
     socket.on('update', (data) => {
-        if (active_connection === data.connectionID) {
+        if (active_connection === data.connectionID)
             updateWidgets(data);
-        }
     });
 
     socket.on('status', (data) => {
-        if (active_connection == data.connectionID) {
-            updateStatus('LOW')
-        }
+        if (active_connection == data.connectionID)
+            updateStatus('LOW');
     })
 
     function updateWidgets(data) {
@@ -34,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#shiftHitCount').sevenSeg({ value: newShiftCount, digits: String(newShiftCount).length, decimalPoint: false });
 
         updateStatus('HIGH')
-        // Update chart
+
         // Update chart
         const hitsChart = echarts.getInstanceByDom(document.getElementById('hitsChart'));
         if (hitsChart) {
@@ -52,28 +61,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const labelIndex = options.xAxis[0].data.indexOf(hourLabel);
             let seriesIndex = options.series.findIndex(s => s.name === productName);
 
-            // ✅ If device/product not in chart, add a new series
             if (seriesIndex === -1) {
                 options.series.push({
                     name: productName,
-                    type: 'bar',   // or 'line' depending on your chart type
+                    type: 'bar',
                     data: Array(options.xAxis[0].data.length).fill(0)
                 });
                 seriesIndex = options.series.length - 1;
             }
 
-            // Now update data
             if (labelIndex > -1) {
                 options.series[seriesIndex].data[labelIndex] =
                     (options.series[seriesIndex].data[labelIndex] || 0) + 1;
             } else {
                 options.xAxis[0].data.push(hourLabel);
                 options.series.forEach((s, i) => {
-                    if (i === seriesIndex) {
-                        s.data.push(1);
-                    } else {
-                        s.data.push(0);
-                    }
+                    s.data.push(i === seriesIndex ? 1 : 0);
                 });
             }
 
@@ -86,5 +89,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     socket.on('disconnect', () => {
         console.log('Disconnected from server.');
+    });
+
+    socket.on('connect_error', (err) => {
+        console.error(`Connection Error: ${err.message}`);
+        // Handle auth error
+        if (err.message.includes("AUTH_ERROR")) {
+            window.location.href = "/";
+        }
     });
 });
