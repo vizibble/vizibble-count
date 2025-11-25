@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { displayHome, GetWidgetData, getRecords, displayDailyChart } = require("../controllers/user.js");
+const { displayHome, GetIndexData, getRecords, getDailyData } = require("../controllers/user.js");
 
-router.route("/")
+router.route("/widgets")
     .get(displayHome);
 
 router.route("/widgets/data")
-    .get(GetWidgetData);
+    .get(GetIndexData);
 
 router.route("/records")
     .get((_, res) => { res.render("records.ejs") });
@@ -15,6 +15,9 @@ router.route("/records/data")
     .get(getRecords)
 
 router.route("/records/chart")
-    .get(displayDailyChart);
+    .get((_, res) => { res.render("daily.ejs") });
+
+router.route("/records/chart/data")
+    .get(getDailyData);
 
 module.exports = router;

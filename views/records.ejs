@@ -105,7 +105,16 @@
 
     // Helper function to get YYYY-MM-DD format
     function getDateForLink(dateString) {
-        return dateString.substring(0, 10);
+        return new Date(dateString)
+            .toLocaleDateString(CONFIG.LOCALE, {
+                timeZone: CONFIG.TIMEZONE,
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+            })
+            .split("/")      // for locales like en-IN → "23/11/2025"
+            .reverse()       // → ["2025","11","23"]
+            .join("-");
     }
 
     // Sort data by date (newest first) then by product name

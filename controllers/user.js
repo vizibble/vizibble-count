@@ -15,7 +15,7 @@ const displayHome = async (req, res) => {
     }
 };
 
-const GetWidgetData = async (req, res) => {
+const GetIndexData = async (req, res) => {
     const { device } = req.query;
     try {
         const { current, previous } = getISTDates();
@@ -75,24 +75,19 @@ const getRecords = async (req, res) => {
     }
 }
 
-const displayDailyChart = async (req, res) => {
-    const dateString = req.query.date;
+const getDailyData = async (req, res) => {
+    const { date } = req.query;
     try {
         // Convert "YYYY-MM-DD" into a start timestamp in IST
-        const startIST = new Date(`${dateString}T00:00:00+05:30`);
-
+        const startIST = new Date(`${date} 06:00:00`);
         // Fetch telemetry hits for that day
-        const hits = await GetTelemetryHits(deviceID, startIST);
-
+        const hits = await GetTelemetryHits(2, startIST);
         // Calculate total hits
         const total = sumCounts(hits);
-
         // Group by hour
         const hourMap = groupHitsByHour(hits);
-
         // Create unique hour list (sorted)
         const hourStrings = uniqueSortedHours(hits);
-
         // Build final data
         const data = hourStrings.map(hourString => {
             const hour = new Date(hourString).getHours();
@@ -102,15 +97,14 @@ const displayDailyChart = async (req, res) => {
             };
         });
 
-        console.log({
-            date: dateString,
+        return res.status(200).json({
             total,
             data
         });
-        return res.status(200).render("daily-chart.ejs");
     } catch (error) {
-
+        console.error(`[${getTimestamp()}] Error retrieving daily data on date ${date}:`, error);
+        return res.status(500).json({ error: "Internal server error while fetching daily data." });
     }
 }
 
-module.exports = { displayHome, GetWidgetData, getRecords, displayDailyChart };
+module.exports = { displayHome, GetIndexData, getRecords, getDailyData };

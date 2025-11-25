@@ -3,46 +3,44 @@ const { query } = require("../service/db");
 const GetTelemetryHits = async (deviceID, startIST) => {
     try {
         const queryText = `
-            WITH hours AS (
-                SELECT generate_series(
-                    $1::timestamp,
-                    $1::timestamp + interval '23 hours',
-                    interval '1 hour'
-                ) AS hour
-            ),
-            products AS (
-                SELECT id, name FROM device_products WHERE device_id = $2
-            ),
-            hours_products AS (
-                SELECT h.hour, p.id as product_id, p.name as product_name
-                FROM hours h
-                CROSS JOIN products p
+            WITH RECURSIVE hours AS (
+                SELECT $1::timestamp AS hour
+                UNION ALL
+                SELECT hour + interval '1 hour'
+                FROM hours
+                WHERE hour < $1::timestamp + interval '23 hours'
             ),
             hits AS (
                 SELECT
-                    date_trunc('hour', timestamp AT TIME ZONE 'Asia/Kolkata') AS hour,
+                    date_trunc(
+                        'hour',
+                        timestamp AT TIME ZONE 'Asia/Kolkata'
+                    ) AS hour,
                     product_id,
                     COUNT(*) AS count
-                FROM
-                    telemetry
+                FROM telemetry
                 WHERE
                     device_id = $2
-                    AND (timestamp AT TIME ZONE 'Asia/Kolkata') >= $1::timestamp
-                    AND (timestamp AT TIME ZONE 'Asia/Kolkata') < ($1::timestamp + interval '1 day')
-                GROUP BY
-                    1, 2
-            )
-            SELECT
-                to_char(hp.hour, 'YYYY-MM-DD HH24:00:00') AS hour,
-                hp.product_id,
-                hp.product_name,
-                COALESCE(t.count, 0) AS count
-            FROM
-                hours_products hp
-                LEFT JOIN hits t ON hp.hour = t.hour AND hp.product_id = t.product_id
-            ORDER BY
-                hp.product_id, hp.hour;
-        `;
+                    AND timestamp >= ($1 AT TIME ZONE 'Asia/Kolkata') AT TIME ZONE 'UTC'
+                    AND timestamp < (($1 + interval '1 day') AT TIME ZONE 'Asia/Kolkata') AT TIME ZONE 'UTC'
+                GROUP BY 1, 2
+                )
+                SELECT
+                    to_char(h.hour, 'YYYY-MM-DD HH24:00:00') AS hour,
+                    p.id AS product_id,
+                    p.name AS product_name,
+                    COALESCE(t.count, 0) AS count
+                FROM hours h
+                CROSS JOIN (
+                    SELECT id, name
+                    FROM device_products
+                    WHERE device_id = $2
+                ) p
+                LEFT JOIN hits t
+                    ON t.hour = h.hour
+                    AND t.product_id = p.id
+                ORDER BY p.id, h.hour;
+            `;
         const { rows } = await query(queryText, [startIST, deviceID]);
         return rows;
     } catch (error) {

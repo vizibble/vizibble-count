@@ -13,7 +13,7 @@ const displayLogin = async (req, res) => {
 
         const decoded = JWTVerification(token);
         if (decoded) {
-            return res.status(200).redirect("/user");
+            return res.status(200).redirect("/user/widgets");
         } else {
             res.clearCookie("token");
             return res.status(200).render("login.ejs");
@@ -43,7 +43,7 @@ const validateLogin = async (req, res) => {
             secure: true,
             maxAge: 30 * 24 * 60 * 60 * 1000,
         });
-        return res.status(200).redirect('/user')
+        return res.status(200).redirect('/user/widgets')
     } catch (error) {
         console.error(`[${getTimestamp()}] Error logging in user:`, error);
         res.status(500).json({ error: 'Internal server error while logging in user.' });

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vizibble | Daily Chart</title>
+    <link rel="stylesheet" href="/CSS/output.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 50%, #e5e7eb 100%);
+            background-size: 200% 100%;
+            animation: skeleton 1.5s ease-in-out infinite;
+        }
+
+        @keyframes skeleton {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+    <%- include('includes/navbar.ejs') %>
+
+        <main class="space-y-8 mx-auto p-4 sm:p-8 max-w-7xl">
+
+            <!-- Page Header -->
+            <div class="flex sm:flex-row flex-col sm:justify-between sm:items-center mb-5">
+                <div class="sm:text-left md:text-left text-center">
+                    <h1 class="font-bold text-gray-900 text-2xl sm:text-3xl">Daily Production Report</h1>
+                    <p id="reportDate" class="mt-1 text-gray-500 text-base"></p>
+                </div>
+                <div class="mt-4 sm:mt-0 text-center sm:text-right">
+                    <button id="downloadPdfBtn"
+                        class="inline-flex items-center bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg font-bold text-white transition-colors duration-200">
+                        <i data-lucide="download" class="mr-2 w-4 h-4"></i>
+                        <span>Download PDF</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUMMARY WIDGETS -->
+            <div id="summaryWidgets" class="gap-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                <!-- Skeleton Widgets -->
+                <div class="bg-white shadow-sm p-4 rounded-lg min-h-[90px] skeleton"></div>
+                <div class="bg-white shadow-sm p-4 rounded-lg min-h-[90px] skeleton"></div>
+                <div class="bg-white shadow-sm p-4 rounded-lg min-h-[90px] skeleton"></div>
+                <div class="bg-white shadow-sm p-4 rounded-lg min-h-[90px] skeleton"></div>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="hidden">
+                <div
+                    class="flex items-center bg-white shadow-lg p-4 border-red-500 border-l-8 rounded-2xl w-full overflow-hidden">
+                    <div class="flex justify-center items-center bg-red-100 rounded-full size-14">
+                        <svg class="size-7 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h5 class="font-semibold text-red-600 text-lg">Error Loading Data</h5>
+                        <p id="errorMessage" class="text-gray-700 text-sm">Could not fetch the required data. Please try
+                            refreshing the page.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div id="dailyChartContainer" class="bg-white shadow-sm p-4 rounded-lg" style="height: 750px;">
+                <!-- Chart will be rendered here, or a skeleton -->
+                <div id="chartSkeleton" class="rounded-lg w-full h-full skeleton"></div>
+            </div>
+
+        </main>
+
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+<script>
+    const url = new URL(window.location.href);
+    const dateParam = url.searchParams.get("date");
+    const jsDate = new Date(dateParam);
+
+    // -----------------------
+    // UTILS
+    // -----------------------
+    function formatDate(date) {
+        return date.toLocaleDateString("en-IN", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            timeZone: "Asia/Kolkata"
+        });
+    }
+
+    // -----------------------
+    // FETCH DATA
+    // -----------------------
+    async function fetchData(date) {
+        const res = await fetch(`/user/records/chart/data?date=${date}`);
+        if (!res.ok) {
+            const errorBody = await res.text();
+            throw new Error(`Failed to fetch chart data. Status: ${res.status}. Body: ${errorBody}`);
+        }
+        return res.json();
+    }
+
+    // -----------------------
+    // SUMMARY WIDGETS
+    // -----------------------
+    function createWidgets(data) {
+        let totalProduction = 0;
+        let inactiveHours = 0;
+        let activeHours = 0;
+        const productTotals = {};
+
+        data.forEach(entry => {
+            let hourTotal = 0;
+            entry.count.forEach(p => {
+                hourTotal += p.count;
+                productTotals[p.product_name] = (productTotals[p.product_name] || 0) + p.count;
+            });
+
+            if (hourTotal === 0) inactiveHours++;
+            else activeHours++;
+            totalProduction += hourTotal;
+        });
+
+        const widgets = [
+            { title: "Total Production", value: `${totalProduction} pcs`, icon: "package" },
+            { title: "Active Hours", value: activeHours, icon: "timer" },
+            { title: "Inactive Hours", value: inactiveHours, icon: "timer-off" },
+            { title: "Uptime", value: `${(activeHours / 24 * 100).toFixed(1)}%`, icon: "zap" }
+        ];
+
+        const container = document.getElementById("summaryWidgets");
+        container.innerHTML = widgets.map(w => `
+            <div class="bg-white shadow-sm p-4 border border-gray-200/80 rounded-lg transition-transform hover:-translate-y-1">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500 text-sm">${w.title}</span>
+                    <i data-lucide="${w.icon}" class="w-5 h-5 text-blue-500"></i>
+                </div>
+                <div class="mt-2 font-bold text-2xl">${w.value}</div>
+            </div>
+        `).join("");
+
+        // Add product totals dynamically
+        Object.keys(productTotals).forEach((name, index) => {
+            container.innerHTML += `
+                <div class="bg-white shadow-sm p-4 border border-gray-200/80 rounded-lg transition-transform hover:-translate-y-1">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 text-sm">${name} Total</span>
+                        <i data-lucide="box" class="w-5 h-5 text-green-500"></i>
+                    </div>
+                    <div class="mt-2 font-bold text-2xl">${productTotals[name]} pcs</div>
+                </div>
+            `;
+        });
+
+        lucide.createIcons();
+    }
+
+    // -----------------------
+    // RENDER CHART
+    // -----------------------
+    function renderChart(data, date) {
+        document.getElementById("chartSkeleton").classList.add("hidden");
+        const chartContainer = document.getElementById("dailyChartContainer");
+
+        // Create a div for the chart if it doesn't exist
+        let chartEl = document.getElementById("dailyChart");
+        if (!chartEl) {
+            chartEl = document.createElement('div');
+            chartEl.id = 'dailyChart';
+            chartEl.style.width = '100%';
+            chartEl.style.height = '100%';
+            chartContainer.appendChild(chartEl);
+        }
+
+        const chart = echarts.init(chartEl);
+
+        const colors = ['#3b82f6', '#10b981', '#f97316', '#8b5cf6', '#ec4899', '#ef4444', '#f59e0b', '#84cc16', '#06b6d4', '#d946ef'];
+
+        const labels = data.map(entry =>
+            new Date(entry.hour).toLocaleString("en-IN", {
+                hour: "2-digit", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata"
+            })
+        );
+
+        const productNames = [...new Set(data.flatMap(entry => entry.count.map(p => p.product_name)))];
+
+        const series = productNames.map((name, index) => ({
+            name,
+            type: "bar",
+            stack: "production",
+            itemStyle: { color: colors[index % colors.length] },
+            data: data.map(entry => {
+                const match = entry.count.find(p => p.product_name === name);
+                return match ? match.count : 0;
+            })
+        }));
+
+        chart.setOption({
+            tooltip: { trigger: "axis", axisPointer: { type: 'shadow' } },
+            legend: { bottom: 0, type: "scroll" },
+            grid: { top: '15%', left: '3%', right: '4%', bottom: '10%', containLabel: true },
+            xAxis: { type: "category", data: labels },
+            yAxis: { type: "value", name: "Pieces" },
+            dataZoom: [
+                { type: 'inside', start: 0, end: 100 },
+                { type: 'slider', start: 0, end: 100, bottom: 40 }
+            ],
+            series
+        });
+
+        window.addEventListener("resize", () => chart.resize());
+    }
+
+    // -----------------------
+    // PDF DOWNLOAD
+    // -----------------------
+    function downloadPdf() {
+        const { jsPDF } = window.jspdf;
+        const btn = document.getElementById('downloadPdfBtn');
+        const originalBtnHTML = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = `<i data-lucide="loader-2" class="mr-2 w-4 h-4 animate-spin"></i> Generating...`;
+        lucide.createIcons();
+
+        const content = document.querySelector('main');
+        const pdfButtonContainer = btn.parentElement;
+
+        // Hide the button from the PDF
+        pdfButtonContainer.style.visibility = 'hidden';
+
+        html2canvas(content, {
+            scale: 2, // Higher resolution
+            useCORS: true,
+            logging: false,
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'px',
+                format: [canvas.width, canvas.height]
+            });
+
+            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+
+            const date = dateParam || new Date().toISOString().split('T')[0];
+            pdf.save(`daily-report-${date}.pdf`);
+
+        }).catch(err => {
+            console.error("Error generating PDF:", err);
+            alert("Could not generate PDF. Please check the console for errors.");
+        }).finally(() => {
+            // Show the button again
+            pdfButtonContainer.style.visibility = 'visible';
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHTML;
+            lucide.createIcons();
+        });
+    }
+
+    // -----------------------
+    // PAGE LOAD
+    // -----------------------
+    window.addEventListener('DOMContentLoaded', async () => {
+        document.getElementById('downloadPdfBtn').addEventListener('click', downloadPdf);
+        lucide.createIcons(); // Initial render for download button icon
+
+        document.getElementById("reportDate").innerText = formatDate(jsDate);
+
+        try {
+            const response = await fetchData(dateParam);
+
+            if (response.data && response.data.length > 0) {
+                createWidgets(response.data);
+                renderChart(response.data, jsDate);
+            } else {
+                document.getElementById("chartSkeleton").classList.add("hidden");
+                const errBox = document.getElementById("errorState");
+                errBox.classList.remove("hidden");
+                document.getElementById("errorMessage").innerText = "No production data found for this date.";
+                document.getElementById("summaryWidgets").innerHTML = '<p class="col-span-full text-gray-500 text-center">No summary available.</p>';
+            }
+
+        } catch (err) {
+            console.error(err);
+            document.getElementById("chartSkeleton").classList.add("hidden");
+            document.getElementById("summaryWidgets").innerHTML = ''; // Clear skeletons
+            const errBox = document.getElementById("errorState");
+            errBox.classList.remove("hidden");
+            document.getElementById("errorMessage").innerText = err.message || "Failed to load data. Please refresh the page.";
+        }
+    });
+</script>
+
+</html>

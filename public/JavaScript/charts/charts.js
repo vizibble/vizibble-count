@@ -117,7 +117,8 @@ function renderChart(chartId, data, date, countKey, stackId, colors) {
                 show: true,
                 start: 0,
                 end: window.innerWidth < 480 ? 30 : 100
-            }
+            },
+            { type: 'inside', start: 0, end: 100 }
         ],
         series: series
     });
